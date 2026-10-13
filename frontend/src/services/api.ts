@@ -79,6 +79,15 @@ class ApiService {
     return this.handleResponse<TrainResponse>(res);
   }
 
+  async generatePredictions(payload: { analysis_id: string; limit?: number }, token: string | null): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/api/predict`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(payload),
+    });
+    return this.handleResponse(res);
+  }
+
   async detectAnomalies(payload: any, token: string | null): Promise<AnomalyDetectResponse> {
     const res = await fetch(`${API_BASE_URL}/api/anomalies/detect`, {
       method: 'POST',

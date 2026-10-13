@@ -45,6 +45,17 @@ def test_full_api_workflow():
     assert train_data["mae"] > 0
     assert train_data["rmse"] > 0
 
+    # 4b. Explicit Predictions Generation
+    predict_payload = {
+        "analysis_id": analysis_id,
+        "limit": 50
+    }
+    res_predict = client.post("/api/predict", json=predict_payload, headers=headers)
+    assert res_predict.status_code == 200
+    predict_data = res_predict.json()
+    assert predict_data["predictions_count"] == 50
+    assert len(predict_data["predictions"]) == 50
+
     # 5. Detect Anomalies
     detect_payload = {
         "analysis_id": analysis_id,

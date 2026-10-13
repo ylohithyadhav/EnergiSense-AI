@@ -63,6 +63,26 @@ class TrainResponse(BaseModel):
     actual_vs_predicted_preview: List[Dict[str, Any]]
     regimes_detected: List[str]
 
+class PredictRequest(BaseModel):
+    analysis_id: str
+    limit: Optional[int] = Field(default=100, ge=1, le=1000)
+
+class PredictItem(BaseModel):
+    index: int
+    timestamp: str
+    building_id: str
+    actual_energy: Optional[float] = None
+    predicted_energy: float
+    residual: Optional[float] = None
+    regime: Optional[str] = None
+
+class PredictResponse(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    analysis_id: str
+    model_name: str = "LightGBM Regressor"
+    predictions_count: int
+    predictions: List[PredictItem]
+
 class AnomalyDetectRequest(BaseModel):
     analysis_id: str
     global_sigma: float = Field(default=3.0, ge=1.0, le=5.0)

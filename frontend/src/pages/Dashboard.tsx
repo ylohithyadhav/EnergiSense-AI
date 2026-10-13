@@ -15,7 +15,9 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  AreaChart,
+  Area
 } from 'recharts';
 import {
   Building2,
@@ -75,7 +77,7 @@ export const Dashboard: React.FC = () => {
     };
   }, [activeUpload, activeTrain, activeAnomaly]);
 
-  // Hourly consumption average chart data
+  // Chart 8: Hourly consumption average
   const hourlyData = useMemo(() => {
     if (!activeTrain) return [];
     const hourlyMap: Record<number, { count: number; total: number }> = {};
@@ -93,7 +95,18 @@ export const Dashboard: React.FC = () => {
     })).sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
   }, [activeTrain]);
 
-  // Anomalies by building data
+  // Chart 3: Normal vs Anomalous distribution
+  const normalVsAnomalyData = useMemo(() => {
+    if (!activeAnomaly) return [];
+    const anomCount = activeAnomaly.anomalies.filter((a) => a.is_anomaly).length;
+    const normCount = activeAnomaly.total_samples - anomCount;
+    return [
+      { name: 'Normal Intervals', value: normCount, color: '#10b981' },
+      { name: 'Anomalous Intervals', value: anomCount, color: '#ef4444' }
+    ];
+  }, [activeAnomaly]);
+
+  // Chart 4: Anomalies by building
   const buildingAnomalyData = useMemo(() => {
     if (!activeAnomaly) return [];
     return Object.entries(activeAnomaly.anomalies_by_building).map(([building, count]) => ({
@@ -102,12 +115,21 @@ export const Dashboard: React.FC = () => {
     }));
   }, [activeAnomaly]);
 
-  // Regime data
+  // Chart 5: Operating Regime breakdown
   const regimeData = useMemo(() => {
     if (!activeAnomaly) return [];
     return Object.entries(activeAnomaly.regime_distribution).map(([name, value]) => ({
       name,
       value
+    }));
+  }, [activeAnomaly]);
+
+  // Chart 6: Detection method comparison
+  const methodComparisonData = useMemo(() => {
+    if (!activeAnomaly) return [];
+    return activeAnomaly.method_comparison.map((m) => ({
+      method: m.method_name.replace(' Threshold', '').replace(' Adaptive', ''),
+      count: m.anomalies_detected
     }));
   }, [activeAnomaly]);
 
@@ -194,7 +216,7 @@ export const Dashboard: React.FC = () => {
         />
       </div>
 
-      {/* When no data is active, show guided empty state */}
+      {/* Guided Empty State */}
       {!activeTrain && (
         <div className="rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600">
@@ -216,14 +238,14 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Active Charts */}
+      {/* Complete Suite of 8 Interactive Charts */}
       {activeTrain && (
         <div className="space-y-6">
-          {/* Chart 1: Actual vs Predicted Energy Over Time */}
+          {/* Chart 1: Actual vs Predicted Energy */}
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
               <div>
-                <h2 className="text-base font-bold text-navy-900">1. Actual vs Predicted Energy Consumption Over Time</h2>
+                <h2 className="text-base font-bold text-navy-900">1. Actual vs Predicted Energy Consumption</h2>
                 <p className="text-xs text-slate-500">
                   Chronological test interval evaluation comparing actual meter readings against LightGBM predictions.
                 </p>
@@ -236,7 +258,7 @@ export const Dashboard: React.FC = () => {
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
-            <div className="h-72 w-full">
+            <div className="h-72 w-full mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={activeTrain.actual_vs_predicted_preview}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -251,12 +273,73 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Chart Row 2 */}
+          {/* Chart 2: Energy Consumption Over Time */}
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-base font-bold text-navy-900 mb-1">2. Energy Consumption Over Time (Continuous Baseline Load)</h2>
+            <p className="text-xs text-slate-500 mb-4">
+              Area trace visualizing the total smart building energy trajectory across time.
+            </p>
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={activeTrain.actual_vs_predicted_preview}>
+                  <defs>
+                    <linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} tickFormatter={(ts) => ts.split(' ')[1] || ts} />
+                  <YAxis tick={{ fontSize: 10 }} unit=" kWh" />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                  <Area type="monotone" dataKey="actual_energy" name="Telemetry Load (kWh)" stroke="#0891b2" fillOpacity={1} fill="url(#colorEnergy)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Charts Row: Chart 3 (Normal vs Anomalous) & Chart 4 (Anomalies by Building) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Chart 3: Normal vs Anomalous Observations */}
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-base font-bold text-navy-900 mb-1">3. Normal vs Anomalous Observations</h2>
+              <p className="text-xs text-slate-500 mb-4">
+                Proportion of normal operations versus flagged abnormal deviations.
+              </p>
+              <div className="h-64 w-full flex items-center justify-center">
+                {normalVsAnomalyData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={normalVsAnomalyData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+                        labelLine={false}
+                      >
+                        {normalVsAnomalyData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-slate-400">
+                    Run Anomaly Detection to visualize ratio
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Chart 4: Anomalies by Building */}
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-base font-bold text-navy-900">2. Anomalies Flagged by Building</h2>
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-base font-bold text-navy-900">4. Anomalies Flagged by Building</h2>
                 {activeAnomaly && (
                   <button onClick={() => navigate('/anomalies/details')} className="text-xs text-blue-600 hover:underline">
                     View Details
@@ -264,7 +347,7 @@ export const Dashboard: React.FC = () => {
                 )}
               </div>
               <p className="text-xs text-slate-500 mb-4">
-                Identifies which physical facility meters exhibit the highest frequency of abnormal consumption.
+                Facility meters exhibiting the highest frequency of abnormal consumption.
               </p>
               <div className="h-64 w-full">
                 {buildingAnomalyData.length > 0 ? (
@@ -284,10 +367,13 @@ export const Dashboard: React.FC = () => {
                 )}
               </div>
             </div>
+          </div>
 
+          {/* Charts Row: Chart 5 (Operating Regime) & Chart 6 (Detection Method Comparison) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Chart 5: Operating Regime Distribution */}
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-base font-bold text-navy-900 mb-2">3. Operating Regime Distribution</h2>
+              <h2 className="text-base font-bold text-navy-900 mb-1">5. Operating Regime Distribution</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Proportion of data categorized by occupancy schedule and thermal cooling stress.
               </p>
@@ -319,13 +405,38 @@ export const Dashboard: React.FC = () => {
                 )}
               </div>
             </div>
+
+            {/* Chart 6: Detection Method Comparison */}
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-base font-bold text-navy-900 mb-1">6. Detection Method Comparison</h2>
+              <p className="text-xs text-slate-500 mb-4">
+                Comparative anomaly discoveries across Global, Rolling, Isolation Forest, and Regime-Aware.
+              </p>
+              <div className="h-64 w-full">
+                {methodComparisonData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={methodComparisonData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="method" tick={{ fontSize: 9 }} interval={0} />
+                      <YAxis tick={{ fontSize: 10 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                      <Bar dataKey="count" name="Flagged Instances" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-slate-400">
+                    Run Anomaly Detection to view method comparison
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Chart Row 3 */}
+          {/* Charts Row: Chart 7 (Feature Importance) & Chart 8 (Energy Usage by Hour) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Chart 7: Feature Importance */}
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-base font-bold text-navy-900 mb-2">4. Top Model Features (LightGBM Gain)</h2>
+              <h2 className="text-base font-bold text-navy-900 mb-1">7. Feature Importance (LightGBM Gain)</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Most influential predictors driving smart building load forecasting.
               </p>
@@ -344,7 +455,7 @@ export const Dashboard: React.FC = () => {
 
             {/* Chart 8: Hourly Energy Usage Profile */}
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-base font-bold text-navy-900 mb-2">5. Diurnal Energy Usage Profile</h2>
+              <h2 className="text-base font-bold text-navy-900 mb-1">8. Diurnal Energy Usage Profile</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Average consumption by time of day across the evaluated intervals.
               </p>

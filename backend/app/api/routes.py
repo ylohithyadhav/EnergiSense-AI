@@ -5,7 +5,8 @@ from typing import List, Optional
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Query, Response
 from app.schemas.analysis_schemas import (
     HealthResponse, StatusResponse, DatasetUploadResponse,
-    TrainRequest, TrainResponse, AnomalyDetectRequest, AnomalyDetectResponse,
+    TrainRequest, TrainResponse, PredictRequest, PredictResponse,
+    AnomalyDetectRequest, AnomalyDetectResponse,
     SHAPExplainRequest, SHAPExplainResponse, AnalysisHistoryItem
 )
 from app.core.config import settings
@@ -99,6 +100,51 @@ async def train_model(
         return train_result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Model training failed: {str(e)}")
+
+@router.post("/predict", response_model=PredictResponse)
+async def generate_predictions(
+    req: PredictRequest,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Generates out-of-sample energy predictions using the trained LightGBM model.
+    """
+    state = get_analysis_state(req.analysis_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Analysis not found. Please train a model first.")
+
+    model = state.get("model")
+    X_test = state.get("X_test")
+    test_meta_df = state.get("test_meta_df")
+    if model is None or X_test is None or test_meta_df is None:
+        raise HTTPException(status_code=400, detail="Trained model or evaluation data unavailable.")
+
+    limit = min(req.limit or 100, len(X_test))
+    preds = model.predict(X_test.iloc[:limit])
+    
+    pred_items = []
+    bldg_col = state["building_col"]
+    for i in range(limit):
+        row = test_meta_df.iloc[i]
+        act = float(row["actual_energy"]) if "actual_energy" in row else None
+        p = round(float(preds[i]), 2)
+        res = round(act - p, 2) if act is not None else None
+        pred_items.append({
+            "index": i,
+            "timestamp": str(row["parsed_timestamp"]),
+            "building_id": str(row[bldg_col]),
+            "actual_energy": act,
+            "predicted_energy": p,
+            "residual": res,
+            "regime": str(row.get("regime", "Normal"))
+        })
+
+    return {
+        "analysis_id": req.analysis_id,
+        "model_name": "LightGBM Regressor (Regime-Aware)",
+        "predictions_count": len(pred_items),
+        "predictions": pred_items
+    }
 
 @router.post("/anomalies/detect", response_model=AnomalyDetectResponse)
 async def detect_anomalies(
