@@ -88,7 +88,7 @@ export const ExplainableAI: React.FC = () => {
           <button
             onClick={() => fetchSHAP(recordIndex)}
             disabled={loading}
-            className="flex items-center gap-2 rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-navy-800 transition disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-navy-800 transition disabled:opacity-50 w-full sm:w-auto"
           >
             <Sparkles className="h-4 w-4 text-cyan-400" />
             <span>Recalculate SHAP Explanations</span>
@@ -112,11 +112,11 @@ export const ExplainableAI: React.FC = () => {
       </div>
 
       {!activeTrain && (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 text-center shadow-sm">
           <p className="text-sm text-slate-600 font-medium">Please train an energy prediction model first.</p>
           <button
             onClick={() => navigate('/predict')}
-            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition"
+            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition w-full sm:w-auto"
           >
             Go to Energy Prediction
           </button>
@@ -129,7 +129,7 @@ export const ExplainableAI: React.FC = () => {
         <div className="space-y-6">
           {/* Individual Instance Explanation Box */}
           {activeSHAP.individual_explanation && (
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
                 <div>
                   <h2 className="text-base font-bold text-navy-900">
@@ -174,7 +174,7 @@ export const ExplainableAI: React.FC = () => {
                   <BarChart data={activeSHAP.individual_explanation.contributions} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis type="number" tick={{ fontSize: 10 }} unit=" kWh" />
-                    <YAxis dataKey="feature" type="category" width={140} tick={{ fontSize: 10 }} />
+                    <YAxis dataKey="feature" type="category" width={110} tick={{ fontSize: 9 }} />
                     <Tooltip
                       contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }}
                       formatter={(val: any) => [`${val > 0 ? '+' : ''}${val} kWh`, 'SHAP Impact']}
@@ -188,7 +188,7 @@ export const ExplainableAI: React.FC = () => {
                 </ResponsiveContainer>
               </div>
 
-              <div className="mt-4 flex items-center justify-center gap-6 text-xs text-slate-500 font-medium">
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs text-slate-500 font-medium">
                 <div className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded bg-rose-500" />
                   <span>Positive Push (Increases Energy Prediction)</span>
@@ -202,7 +202,7 @@ export const ExplainableAI: React.FC = () => {
           )}
 
           {/* Global SHAP Feature Importance */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
             <h2 className="text-base font-bold text-navy-900 mb-2">Global Feature Importance (Mean |SHAP Value|)</h2>
             <p className="text-xs text-slate-500 mb-6">
               Average magnitude of impact across evaluation dataset. Demonstrates which external drivers most significantly steer predictions.
@@ -213,7 +213,7 @@ export const ExplainableAI: React.FC = () => {
                 <BarChart data={activeSHAP.global_importance} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis type="number" tick={{ fontSize: 10 }} />
-                  <YAxis dataKey="feature" type="category" width={140} tick={{ fontSize: 10 }} />
+                  <YAxis dataKey="feature" type="category" width={110} tick={{ fontSize: 9 }} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }}
                   />

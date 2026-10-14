@@ -91,7 +91,7 @@ export const EnergyPrediction: React.FC = () => {
         {activeTrain && (
           <button
             onClick={() => navigate('/anomalies')}
-            className="flex items-center gap-2 rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-navy-800 transition"
+            className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-navy-800 transition w-full sm:w-auto"
           >
             <span>Proceed to Anomaly Detection</span>
             <ArrowRight className="h-4 w-4" />
@@ -108,11 +108,11 @@ export const EnergyPrediction: React.FC = () => {
 
       {/* Dataset Check or Prompt */}
       {!activeUpload && (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 text-center shadow-sm">
           <p className="text-sm text-slate-600 font-medium">No active dataset selected for prediction.</p>
           <button
             onClick={() => navigate('/upload')}
-            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition"
+            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition w-full sm:w-auto"
           >
             Go to Dataset Upload
           </button>
@@ -121,8 +121,8 @@ export const EnergyPrediction: React.FC = () => {
 
       {/* Training Configuration Panel */}
       {activeUpload && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
             <div className="flex items-center gap-2">
               <Sliders className="h-5 w-5 text-blue-600" />
               <h2 className="text-base font-bold text-navy-900">Chronological Split Configuration</h2>
@@ -182,7 +182,7 @@ export const EnergyPrediction: React.FC = () => {
             <button
               onClick={handleTrain}
               disabled={loading}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-xs font-semibold text-white shadow hover:bg-blue-700 transition disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-xs font-semibold text-white shadow hover:bg-blue-700 transition disabled:opacity-50 w-full sm:w-auto"
             >
               <Cpu className="h-4 w-4" />
               <span>{loading ? 'Training LightGBM Pipeline...' : 'Train Model & Generate Predictions'}</span>
@@ -197,7 +197,7 @@ export const EnergyPrediction: React.FC = () => {
       {activeTrain && !loading && (
         <div className="space-y-6">
           {/* Performance KPIs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <KPICard
               title="Test MAE"
               value={`${activeTrain.mae.toFixed(2)} kWh`}
@@ -229,7 +229,7 @@ export const EnergyPrediction: React.FC = () => {
           </div>
 
           {/* Actual vs Predicted Interactive Chart */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
             <h2 className="text-base font-bold text-navy-900 mb-2">Chronological Prediction Trace: Actual vs Predicted Load</h2>
             <p className="text-xs text-slate-500 mb-6">
               Hourly comparison across test intervals. Divergence indicates unexpected energy consumption anomalies.
@@ -268,7 +268,7 @@ export const EnergyPrediction: React.FC = () => {
           </div>
 
           {/* Feature Importance Chart */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
             <h2 className="text-base font-bold text-navy-900 mb-2">LightGBM Model Feature Importance (Normalized Gain)</h2>
             <p className="text-xs text-slate-500 mb-6">
               Relative contribution of meteorological factors, occupancy profiles, and temporal cyclics.
@@ -279,7 +279,7 @@ export const EnergyPrediction: React.FC = () => {
                 <BarChart data={activeTrain.feature_importances} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis type="number" tick={{ fontSize: 10 }} />
-                  <YAxis dataKey="feature" type="category" width={140} tick={{ fontSize: 10 }} />
+                  <YAxis dataKey="feature" type="category" width={110} tick={{ fontSize: 9 }} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }}
                   />
@@ -290,7 +290,7 @@ export const EnergyPrediction: React.FC = () => {
           </div>
 
           {/* Preview Table */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
             <h2 className="text-base font-bold text-navy-900 mb-4">Sample Test Observations & Residuals Preview</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">

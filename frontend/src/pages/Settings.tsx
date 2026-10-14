@@ -36,15 +36,15 @@ export const Settings: React.FC = () => {
       {/* Cloud Environment Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Backend API Box */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Server className="h-5 w-5 text-blue-600" />
             <h2 className="text-sm font-bold text-navy-900">Python ML Backend Service</h2>
           </div>
           <div className="space-y-2 text-xs">
-            <div className="flex justify-between py-1 border-b border-slate-100">
-              <span className="text-slate-500">Base API URL:</span>
-              <span className="font-mono text-slate-800">{import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && (window.location.hostname.endsWith('web.app') || window.location.hostname.endsWith('firebaseapp.com')) ? 'https://energisense-ai.onrender.com' : 'http://127.0.0.1:8000')}</span>
+            <div className="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-slate-100 gap-1">
+              <span className="text-slate-500 flex-shrink-0">Base API URL:</span>
+              <span className="font-mono text-slate-800 break-all">{import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && (window.location.hostname.endsWith('web.app') || window.location.hostname.endsWith('firebaseapp.com')) ? 'https://energisense-ai.onrender.com' : 'http://127.0.0.1:8000')}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-100">
               <span className="text-slate-500">Health Status:</span>
@@ -64,7 +64,7 @@ export const Settings: React.FC = () => {
         </div>
 
         {/* Firebase Services Box */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Database className="h-5 w-5 text-amber-500" />
             <h2 className="text-sm font-bold text-navy-900">Firebase Cloud Services</h2>
@@ -93,7 +93,7 @@ export const Settings: React.FC = () => {
       </div>
 
       {/* User Session Box */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
         <h2 className="text-sm font-bold text-navy-900 mb-3">Active Authenticated Analyst Profile</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
@@ -112,7 +112,7 @@ export const Settings: React.FC = () => {
       </div>
 
       {/* Architecture Citation & Academic Project Info */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
         <h2 className="text-sm font-bold text-navy-900 mb-2">Project Specification</h2>
         <p className="text-xs text-slate-600 leading-relaxed">
           <strong>Title:</strong> A Regime-Aware Explainable Machine Learning Framework for Energy Prediction and Anomaly Detection in Smart Buildings.<br />

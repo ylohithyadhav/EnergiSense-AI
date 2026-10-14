@@ -45,7 +45,7 @@ export const Register: React.FC = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4 font-sans">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-slate-200">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-xl border border-slate-200">
         <div className="text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-navy-900 shadow-md">
             <img src="/logo.svg" alt="EnergiSense AI" className="h-9 w-9" />

@@ -148,7 +148,7 @@ export const Dashboard: React.FC = () => {
         {!activeUpload && (
           <button
             onClick={() => navigate('/upload')}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition"
+            className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition w-full sm:w-auto"
           >
             <Sparkles className="h-4 w-4" />
             <span>Upload or Load Demo Dataset</span>
@@ -157,7 +157,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KPICard
           title="Buildings Analyzed"
           value={kpis.buildings}
@@ -218,7 +218,7 @@ export const Dashboard: React.FC = () => {
 
       {/* Guided Empty State */}
       {!activeTrain && (
-        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-10 text-center shadow-sm">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600">
             <Zap className="h-7 w-7" />
           </div>
@@ -226,10 +226,10 @@ export const Dashboard: React.FC = () => {
           <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto">
             Upload your building energy CSV telemetry or load our pre-configured synthetic demo dataset to view interactive predictions, anomaly distributions, and SHAP explainability charts.
           </p>
-          <div className="mt-6 flex justify-center gap-3">
+          <div className="mt-6 flex justify-center">
             <button
               onClick={() => navigate('/upload')}
-              className="flex items-center gap-2 rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-semibold text-white shadow hover:bg-navy-800 transition"
+              className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-semibold text-white shadow hover:bg-navy-800 transition w-full sm:w-auto"
             >
               <span>Get Started with Dataset Upload</span>
               <ArrowRight className="h-4 w-4" />
@@ -242,8 +242,8 @@ export const Dashboard: React.FC = () => {
       {activeTrain && (
         <div className="space-y-6">
           {/* Chart 1: Actual vs Predicted Energy */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
               <div>
                 <h2 className="text-base font-bold text-navy-900">1. Actual vs Predicted Energy Consumption</h2>
                 <p className="text-xs text-slate-500">
@@ -252,7 +252,7 @@ export const Dashboard: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/predict')}
-                className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1"
+                className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1 self-start sm:self-auto"
               >
                 <span>Pipeline Details</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -274,7 +274,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Chart 2: Energy Consumption Over Time */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
             <h2 className="text-base font-bold text-navy-900 mb-1">2. Energy Consumption Over Time (Continuous Baseline Load)</h2>
             <p className="text-xs text-slate-500 mb-4">
               Area trace visualizing the total smart building energy trajectory across time.
@@ -301,7 +301,7 @@ export const Dashboard: React.FC = () => {
           {/* Charts Row: Chart 3 (Normal vs Anomalous) & Chart 4 (Anomalies by Building) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Chart 3: Normal vs Anomalous Observations */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
               <h2 className="text-base font-bold text-navy-900 mb-1">3. Normal vs Anomalous Observations</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Proportion of normal operations versus flagged abnormal deviations.
@@ -337,11 +337,11 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Chart 4: Anomalies by Building */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-1">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-1">
                 <h2 className="text-base font-bold text-navy-900">4. Anomalies Flagged by Building</h2>
                 {activeAnomaly && (
-                  <button onClick={() => navigate('/anomalies/details')} className="text-xs text-blue-600 hover:underline">
+                  <button onClick={() => navigate('/anomalies/details')} className="text-xs text-blue-600 hover:underline self-start sm:self-auto">
                     View Details
                   </button>
                 )}
@@ -372,7 +372,7 @@ export const Dashboard: React.FC = () => {
           {/* Charts Row: Chart 5 (Operating Regime) & Chart 6 (Detection Method Comparison) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Chart 5: Operating Regime Distribution */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
               <h2 className="text-base font-bold text-navy-900 mb-1">5. Operating Regime Distribution</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Proportion of data categorized by occupancy schedule and thermal cooling stress.
@@ -407,7 +407,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Chart 6: Detection Method Comparison */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
               <h2 className="text-base font-bold text-navy-900 mb-1">6. Detection Method Comparison</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Comparative anomaly discoveries across Global, Rolling, Isolation Forest, and Regime-Aware.
@@ -435,7 +435,7 @@ export const Dashboard: React.FC = () => {
           {/* Charts Row: Chart 7 (Feature Importance) & Chart 8 (Energy Usage by Hour) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Chart 7: Feature Importance */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
               <h2 className="text-base font-bold text-navy-900 mb-1">7. Feature Importance (LightGBM Gain)</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Most influential predictors driving smart building load forecasting.
@@ -445,7 +445,7 @@ export const Dashboard: React.FC = () => {
                   <BarChart data={activeTrain.feature_importances.slice(0, 8)} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis type="number" tick={{ fontSize: 10 }} />
-                    <YAxis dataKey="feature" type="category" width={130} tick={{ fontSize: 10 }} />
+                    <YAxis dataKey="feature" type="category" width={110} tick={{ fontSize: 9 }} />
                     <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
                     <Bar dataKey="importance" name="Relative Gain" fill="#2563eb" radius={[0, 4, 4, 0]} />
                   </BarChart>
@@ -454,7 +454,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Chart 8: Hourly Energy Usage Profile */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
               <h2 className="text-base font-bold text-navy-900 mb-1">8. Diurnal Energy Usage Profile</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Average consumption by time of day across the evaluated intervals.

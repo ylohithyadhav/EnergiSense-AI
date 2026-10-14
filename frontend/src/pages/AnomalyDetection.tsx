@@ -86,7 +86,7 @@ export const AnomalyDetection: React.FC = () => {
         {activeAnomaly && (
           <button
             onClick={() => navigate('/anomalies/details')}
-            className="flex items-center gap-2 rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-navy-800 transition"
+            className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-navy-800 transition w-full sm:w-auto"
           >
             <span>Inspect Anomaly Details</span>
             <ArrowRight className="h-4 w-4" />
@@ -102,11 +102,11 @@ export const AnomalyDetection: React.FC = () => {
       )}
 
       {!activeTrain && (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 text-center shadow-sm">
           <p className="text-sm text-slate-600 font-medium">Please train an energy prediction model first.</p>
           <button
             onClick={() => navigate('/predict')}
-            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition"
+            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition w-full sm:w-auto"
           >
             Go to Energy Prediction
           </button>
@@ -115,7 +115,7 @@ export const AnomalyDetection: React.FC = () => {
 
       {/* Threshold Configuration Controls */}
       {activeTrain && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <Sliders className="h-5 w-5 text-blue-600" />
             <h2 className="text-base font-bold text-navy-900">Algorithm Parameter Tuning</h2>
@@ -124,7 +124,7 @@ export const AnomalyDetection: React.FC = () => {
             Configure threshold sensitivity factors calibrated on validation residuals (preventing test label leakage).
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex justify-between text-xs font-semibold text-slate-700">
                 <span>Method 1: Global Threshold</span>
@@ -198,7 +198,7 @@ export const AnomalyDetection: React.FC = () => {
             <button
               onClick={handleDetect}
               disabled={loading}
-              className="flex items-center gap-2 rounded-lg bg-navy-900 px-6 py-2.5 text-xs font-semibold text-white shadow hover:bg-navy-800 transition disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-6 py-2.5 text-xs font-semibold text-white shadow hover:bg-navy-800 transition disabled:opacity-50 w-full sm:w-auto"
             >
               <AlertTriangle className="h-4 w-4 text-amber-400" />
               <span>{loading ? 'Executing Anomaly Detection...' : 'Run All 4 Detection Methods'}</span>
@@ -213,10 +213,10 @@ export const AnomalyDetection: React.FC = () => {
       {activeAnomaly && !loading && (
         <div className="space-y-6">
           {/* Method Comparison Table */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
               <h2 className="text-base font-bold text-navy-900">Comparative Method Evaluation Benchmark</h2>
-              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold self-start sm:self-auto ${
                 activeAnomaly.ground_truth_available ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'
               }`}>
                 {activeAnomaly.ground_truth_available ? 'Ground Truth Labeled' : 'Unlabeled (Supervised Metrics N/A)'}
@@ -282,7 +282,7 @@ export const AnomalyDetection: React.FC = () => {
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Detection Count Bar Chart */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
               <h2 className="text-base font-bold text-navy-900 mb-2">Anomalies Detected Across Methods</h2>
               <p className="text-xs text-slate-500 mb-6">
                 Comparative count of anomalous instances flagged in the held-out test partition.
@@ -301,7 +301,7 @@ export const AnomalyDetection: React.FC = () => {
             </div>
 
             {/* Operating Regime Breakdown */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
               <h2 className="text-base font-bold text-navy-900 mb-2">Operating Regime Distribution</h2>
               <p className="text-xs text-slate-500 mb-6">
                 Distribution of building operation states (Occupied Peak, Off-Hours Night, Weekend, Thermal Load).

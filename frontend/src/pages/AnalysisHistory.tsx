@@ -47,7 +47,7 @@ export const AnalysisHistory: React.FC = () => {
         <button
           onClick={fetchHistory}
           disabled={loading}
-          className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition"
+          className="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition w-full sm:w-auto"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh Records</span>
@@ -63,7 +63,7 @@ export const AnalysisHistory: React.FC = () => {
       {loading && <LoadingSpinner message="Retrieving Cloud Firestore analysis history..." size="md" />}
 
       {!loading && history.length === 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-12 text-center shadow-sm">
           <Database className="mx-auto h-12 w-12 text-slate-300" />
           <h3 className="mt-3 text-base font-semibold text-navy-900">No Past Analyses Found</h3>
           <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">

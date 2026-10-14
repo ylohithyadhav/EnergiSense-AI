@@ -13,15 +13,30 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> List[str]:
         val = self.ALLOWED_ORIGINS
+        origins: List[str] = []
         if isinstance(val, list):
-            return val
-        if val.startswith("[") and val.endswith("]"):
+            origins = list(val)
+        elif val.startswith("[") and val.endswith("]"):
             import json
             try:
-                return json.loads(val)
+                origins = json.loads(val)
             except Exception:
-                pass
-        return [i.strip() for i in val.split(",") if i.strip()]
+                origins = [i.strip() for i in val.split(",") if i.strip()]
+        else:
+            origins = [i.strip() for i in val.split(",") if i.strip()]
+
+        essential = [
+            "https://energisense-ai.web.app",
+            "https://energisense-ai.firebaseapp.com",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000"
+        ]
+        for origin in essential:
+            if origin not in origins:
+                origins.append(origin)
+        return origins
     
     # File limits
     MAX_UPLOAD_SIZE_MB: int = 50

@@ -72,7 +72,7 @@ export const AnomalyDetails: React.FC = () => {
         {activeAnomaly && (
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-navy-800 transition"
+            className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-navy-800 transition w-full sm:w-auto"
           >
             <Download className="h-4 w-4" />
             <span>Export Anomaly Report (CSV)</span>
@@ -81,11 +81,11 @@ export const AnomalyDetails: React.FC = () => {
       </div>
 
       {!activeAnomaly && (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 text-center shadow-sm">
           <p className="text-sm text-slate-600 font-medium">No anomaly detection results active.</p>
           <button
             onClick={() => navigate('/anomalies')}
-            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition"
+            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition w-full sm:w-auto"
           >
             Run Anomaly Detection First
           </button>
@@ -95,7 +95,7 @@ export const AnomalyDetails: React.FC = () => {
       {activeAnomaly && (
         <div className="space-y-4">
           {/* Filter Bar */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="relative w-full md:w-72">
               <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <input
@@ -110,7 +110,7 @@ export const AnomalyDetails: React.FC = () => {
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div className="flex flex-wrap items-center justify-between sm:justify-start gap-3 w-full md:w-auto">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-slate-600">Severity:</span>
                 <select
@@ -216,12 +216,12 @@ export const AnomalyDetails: React.FC = () => {
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex items-center justify-between border-t border-slate-200 px-6 py-3 bg-slate-50">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200 px-4 sm:px-6 py-3 bg-slate-50">
               <span className="text-xs text-slate-500">
                 Page <span className="font-semibold text-navy-900">{currentPage}</span> of{' '}
                 <span className="font-semibold text-navy-900">{totalPages}</span>
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
                 <button
                   disabled={currentPage <= 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}

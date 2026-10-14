@@ -6,10 +6,12 @@ import {
   AnalysisHistoryItem
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
   (typeof window !== 'undefined' && (window.location.hostname.endsWith('web.app') || window.location.hostname.endsWith('firebaseapp.com'))
     ? 'https://energisense-ai.onrender.com'
     : 'http://127.0.0.1:8000');
+
+export const API_BASE_URL = (RAW_API_BASE_URL || '').trim().replace(/\/+$/, '');
 
 class ApiService {
   private getHeaders(token: string | null = null, isJson = true): HeadersInit {
@@ -41,17 +43,40 @@ class ApiService {
 
   async checkHealth(): Promise<{ status: string; service: string }> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
     try {
-      const res = await fetch(`${API_BASE_URL}/health`, { signal: controller.signal });
+      const res = await fetch(`${API_BASE_URL}/health`, { 
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' }
+      });
       clearTimeout(timeoutId);
+      if (res.ok) {
+        return this.handleResponse(res);
+      }
+      // If root /health returned non-200, test /api/status as fallback probe
+      const statusRes = await fetch(`${API_BASE_URL}/api/status`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (statusRes.ok) {
+        return { status: 'ok', service: 'EnergiSense AI API' };
+      }
       return this.handleResponse(res);
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        throw new Error("Backend connection timed out. If hosted on Render Free tier, the service may be spinning up from idle (cold start).");
+        throw new Error("Backend connection timed out (25s). If hosted on Render Free tier, the service may be spinning up from idle (cold start).");
+      }
+      if (err.name === 'TypeError' && (err.message?.includes('fetch') || err.message?.includes('NetworkError'))) {
+        throw new Error("Unable to reach backend API. If the service is running, verify Render CORS allows https://energisense-ai.web.app.");
       }
       throw err;
     }
+  }
+
+  async getStatus(): Promise<{ status: string; environment: string; firebase_auth_enabled: boolean; firestore_enabled: boolean; max_upload_size_mb: number }> {
+    const res = await fetch(`${API_BASE_URL}/api/status`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    return this.handleResponse(res);
   }
 
   async uploadDataset(file: File, token: string | null): Promise<DatasetUploadResponse> {
