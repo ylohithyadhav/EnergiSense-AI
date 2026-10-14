@@ -13,6 +13,14 @@ const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
 
 export const API_BASE_URL = (RAW_API_BASE_URL || '').trim().replace(/\/+$/, '');
 
+export type TokenProvider = (forceRefresh?: boolean) => Promise<string | null>;
+
+let globalTokenProvider: TokenProvider | null = null;
+
+export const setApiTokenProvider = (provider: TokenProvider | null) => {
+  globalTokenProvider = provider;
+};
+
 class ApiService {
   private getHeaders(token: string | null = null, isJson = true): HeadersInit {
     const headers: Record<string, string> = {};
@@ -39,6 +47,51 @@ class ApiService {
       throw new Error(errorMsg);
     }
     return res.json() as Promise<T>;
+  }
+
+  /**
+   * Central execution wrapper that handles Authorization headers and performs
+   * a single automatic retry with a force-refreshed Firebase ID token if an HTTP 401 occurs.
+   */
+  private async executeFetch<T>(
+    inputUrl: string,
+    init: RequestInit,
+    token: string | null = null
+  ): Promise<T> {
+    let activeToken = token;
+    if (!activeToken && globalTokenProvider) {
+      activeToken = await globalTokenProvider(false);
+    }
+
+    const prepareHeaders = (tok: string | null): Headers => {
+      const h = new Headers(init.headers || {});
+      if (tok) {
+        h.set('Authorization', `Bearer ${tok}`);
+      }
+      return h;
+    };
+
+    let res = await fetch(inputUrl, {
+      ...init,
+      headers: prepareHeaders(activeToken),
+    });
+
+    // If 401 Unauthorized, attempt a single retry with a fresh token
+    if (res.status === 401 && globalTokenProvider) {
+      try {
+        const freshToken = await globalTokenProvider(true);
+        if (freshToken) {
+          res = await fetch(inputUrl, {
+            ...init,
+            headers: prepareHeaders(freshToken),
+          });
+        }
+      } catch (refreshErr) {
+        console.warn("Silent token refresh on 401 failed:", refreshErr);
+      }
+    }
+
+    return this.handleResponse<T>(res);
   }
 
   async checkHealth(): Promise<{ status: string; service: string }> {
@@ -83,76 +136,102 @@ class ApiService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const res = await fetch(`${API_BASE_URL}/api/dataset/upload`, {
-      method: 'POST',
-      headers: this.getHeaders(token, false),
-      body: formData,
-    });
-    return this.handleResponse<DatasetUploadResponse>(res);
+    return this.executeFetch<DatasetUploadResponse>(
+      `${API_BASE_URL}/api/dataset/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      },
+      token
+    );
   }
 
   async getDatasetPreview(fileId: string, limit = 10, token: string | null): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/api/dataset/preview?file_id=${fileId}&limit=${limit}`, {
-      headers: this.getHeaders(token),
-    });
-    return this.handleResponse(res);
+    return this.executeFetch(
+      `${API_BASE_URL}/api/dataset/preview?file_id=${fileId}&limit=${limit}`,
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+      token
+    );
   }
 
   async trainModel(payload: any, token: string | null): Promise<TrainResponse> {
-    const res = await fetch(`${API_BASE_URL}/api/model/train`, {
-      method: 'POST',
-      headers: this.getHeaders(token),
-      body: JSON.stringify(payload),
-    });
-    return this.handleResponse<TrainResponse>(res);
+    return this.executeFetch<TrainResponse>(
+      `${API_BASE_URL}/api/model/train`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      },
+      token
+    );
   }
 
   async generatePredictions(payload: { analysis_id: string; limit?: number }, token: string | null): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/api/predict`, {
-      method: 'POST',
-      headers: this.getHeaders(token),
-      body: JSON.stringify(payload),
-    });
-    return this.handleResponse(res);
+    return this.executeFetch(
+      `${API_BASE_URL}/api/predict`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      },
+      token
+    );
   }
 
   async detectAnomalies(payload: any, token: string | null): Promise<AnomalyDetectResponse> {
-    const res = await fetch(`${API_BASE_URL}/api/anomalies/detect`, {
-      method: 'POST',
-      headers: this.getHeaders(token),
-      body: JSON.stringify(payload),
-    });
-    return this.handleResponse<AnomalyDetectResponse>(res);
+    return this.executeFetch<AnomalyDetectResponse>(
+      `${API_BASE_URL}/api/anomalies/detect`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      },
+      token
+    );
   }
 
   async explainPredictions(payload: any, token: string | null): Promise<SHAPExplainResponse> {
-    const res = await fetch(`${API_BASE_URL}/api/explain`, {
-      method: 'POST',
-      headers: this.getHeaders(token),
-      body: JSON.stringify(payload),
-    });
-    return this.handleResponse<SHAPExplainResponse>(res);
+    return this.executeFetch<SHAPExplainResponse>(
+      `${API_BASE_URL}/api/explain`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      },
+      token
+    );
   }
 
   async getEvaluation(analysisId: string, token: string | null): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/api/evaluate?analysis_id=${analysisId}`, {
-      headers: this.getHeaders(token),
-    });
-    return this.handleResponse(res);
+    return this.executeFetch(
+      `${API_BASE_URL}/api/evaluate?analysis_id=${analysisId}`,
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+      token
+    );
   }
 
   async getAnalysesHistory(token: string | null): Promise<AnalysisHistoryItem[]> {
-    const res = await fetch(`${API_BASE_URL}/api/analyses`, {
-      headers: this.getHeaders(token),
-    });
-    return this.handleResponse<AnalysisHistoryItem[]>(res);
+    return this.executeFetch<AnalysisHistoryItem[]>(
+      `${API_BASE_URL}/api/analyses`,
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+      token
+    );
   }
 
   async getSingleAnalysis(analysisId: string, token: string | null): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/api/analyses/${analysisId}`, {
-      headers: this.getHeaders(token),
-    });
-    return this.handleResponse(res);
+    return this.executeFetch(
+      `${API_BASE_URL}/api/analyses/${analysisId}`,
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+      token
+    );
   }
 
   getExportUrl(analysisId: string): string {

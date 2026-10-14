@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../services/firebase';
+import { setApiTokenProvider } from '../services/api';
 import { UserProfile } from '../types';
 
 interface AuthContextType {
@@ -21,7 +22,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   loginDemoUser: () => void;
   logout: () => Promise<void>;
-  getIdToken: () => Promise<string | null>;
+  getIdToken: (forceRefresh?: boolean) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -147,15 +148,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRawFirebaseUser(null);
   };
 
-  const getIdToken = async (): Promise<string | null> => {
-    if (rawFirebaseUser) {
-      return await rawFirebaseUser.getIdToken();
+  const getIdToken = async (forceRefresh = false): Promise<string | null> => {
+    const user = rawFirebaseUser || (auth && auth.currentUser) || null;
+    if (user) {
+      try {
+        return await user.getIdToken(forceRefresh);
+      } catch (err) {
+        console.warn("Could not retrieve Firebase ID token:", err);
+        return null;
+      }
     }
     if (currentUser?.isDemo) {
       return `demo-token-${currentUser.uid}`;
     }
     return null;
   };
+
+  useEffect(() => {
+    setApiTokenProvider(getIdToken);
+  }, [rawFirebaseUser, currentUser]);
 
   return (
     <AuthContext.Provider

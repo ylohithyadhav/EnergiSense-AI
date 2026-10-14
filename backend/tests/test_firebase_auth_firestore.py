@@ -1,13 +1,55 @@
 import pytest
+import time
+import datetime
+import jwt
 from unittest.mock import patch, MagicMock
 from fastapi import HTTPException
-from app.core.auth import get_current_user
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography import x509
+from cryptography.x509.oid import NameOID
+
+from app.core import auth
+from app.core.auth import get_current_user, verify_firebase_id_token
 from app.services.firestore_backend import (
     save_analysis_record,
     get_user_analyses,
     get_analysis_by_id,
     get_evaluation_by_analysis_id
 )
+
+@pytest.fixture
+def mock_firebase_crypto():
+    """Generates an RSA keypair and self-signed X509 certificate for token testing."""
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'securetoken@system.gserviceaccount.com')])
+    cert = x509.CertificateBuilder().subject_name(
+        subject
+    ).issuer_name(
+        issuer
+    ).public_key(
+        key.public_key()
+    ).serial_number(
+        1001
+    ).not_valid_before(
+        datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)
+    ).not_valid_after(
+        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+    ).sign(key, hashes.SHA256())
+
+    kid = "test-mock-kid-01"
+    pub_key = cert.public_key()
+    
+    # Inject into auth cache
+    orig_cache = auth._google_public_keys_cache.copy()
+    orig_time = auth._google_certs_fetched_at
+    auth._google_public_keys_cache = {kid: pub_key}
+    auth._google_certs_fetched_at = time.time()
+
+    yield {"key": key, "kid": kid, "pub_key": pub_key}
+
+    auth._google_public_keys_cache = orig_cache
+    auth._google_certs_fetched_at = orig_time
 
 @pytest.mark.anyio
 async def test_auth_missing_header_fallback():
@@ -28,6 +70,78 @@ async def test_auth_demo_token():
     user = await get_current_user(authorization="Bearer demo-token-analyst-123")
     assert user["uid"] == "analyst-123"
     assert user["is_demo"] is True
+
+@pytest.mark.anyio
+async def test_firebase_token_cryptographic_verification(mock_firebase_crypto):
+    now = int(time.time())
+    payload = {
+        "iss": "https://securetoken.google.com/energisense-ai",
+        "aud": "energisense-ai",
+        "sub": "firebase-test-user-789",
+        "user_id": "firebase-test-user-789",
+        "email": "verified.analyst@energisense.ai",
+        "name": "Verified Smart Analyst",
+        "iat": now,
+        "exp": now + 3600
+    }
+    token = jwt.encode(payload, mock_firebase_crypto["key"], algorithm="RS256", headers={"kid": mock_firebase_crypto["kid"]})
+
+    user = await get_current_user(authorization=f"Bearer {token}")
+    assert user["uid"] == "firebase-test-user-789"
+    assert user["email"] == "verified.analyst@energisense.ai"
+    assert user["name"] == "Verified Smart Analyst"
+    assert user["is_demo"] is False
+
+@pytest.mark.anyio
+async def test_firebase_token_expired_rejection(mock_firebase_crypto):
+    past = int(time.time()) - 3600
+    payload = {
+        "iss": "https://securetoken.google.com/energisense-ai",
+        "aud": "energisense-ai",
+        "sub": "expired-user",
+        "iat": past - 3600,
+        "exp": past
+    }
+    token = jwt.encode(payload, mock_firebase_crypto["key"], algorithm="RS256", headers={"kid": mock_firebase_crypto["kid"]})
+
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user(authorization=f"Bearer {token}")
+    assert exc_info.value.status_code == 401
+    assert "expired" in exc_info.value.detail.lower()
+
+@pytest.mark.anyio
+async def test_firebase_token_invalid_audience_rejection(mock_firebase_crypto):
+    now = int(time.time())
+    payload = {
+        "iss": "https://securetoken.google.com/energisense-ai",
+        "aud": "wrong-project",
+        "sub": "wrong-aud-user",
+        "iat": now,
+        "exp": now + 3600
+    }
+    token = jwt.encode(payload, mock_firebase_crypto["key"], algorithm="RS256", headers={"kid": mock_firebase_crypto["kid"]})
+
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user(authorization=f"Bearer {token}")
+    assert exc_info.value.status_code == 401
+    assert "audience mismatch" in exc_info.value.detail.lower()
+
+@pytest.mark.anyio
+async def test_firebase_token_invalid_issuer_rejection(mock_firebase_crypto):
+    now = int(time.time())
+    payload = {
+        "iss": "https://securetoken.google.com/wrong-project",
+        "aud": "energisense-ai",
+        "sub": "wrong-iss-user",
+        "iat": now,
+        "exp": now + 3600
+    }
+    token = jwt.encode(payload, mock_firebase_crypto["key"], algorithm="RS256", headers={"kid": mock_firebase_crypto["kid"]})
+
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user(authorization=f"Bearer {token}")
+    assert exc_info.value.status_code == 401
+    assert "issuer mismatch" in exc_info.value.detail.lower()
 
 @pytest.mark.anyio
 async def test_firestore_save_and_retrieve_local_fallback():
