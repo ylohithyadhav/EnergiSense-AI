@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, AlertCircle } from 'lucide-react';
+import { Lock, Mail, AlertCircle, User as UserIcon, ArrowRight } from 'lucide-react';
 
 export const Register: React.FC = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { registerWithEmail } = useAuth();
+  const { registerWithEmail, loginDemoUser, isFirebaseActive } = useAuth();
   const navigate = useNavigate();
+
+  const handleDemoLogin = () => {
+    loginDemoUser();
+    navigate('/dashboard');
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +34,7 @@ export const Register: React.FC = () => {
 
     setLoading(true);
     try {
-      await registerWithEmail(email, password);
+      await registerWithEmail(email, password, name);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please check your details.');
@@ -58,6 +64,21 @@ export const Register: React.FC = () => {
         )}
 
         <form onSubmit={handleRegister} className="mt-6 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700">Full Name / Analyst Name</label>
+            <div className="relative mt-1">
+              <UserIcon className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Dr. Alex Rivera"
+                className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-slate-700">Email Address</label>
             <div className="relative mt-1">
@@ -112,12 +133,37 @@ export const Register: React.FC = () => {
           </button>
         </form>
 
+        {/* Demo Fallback Option */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-slate-400 font-semibold">Or Instant Demo Access</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleDemoLogin}
+          type="button"
+          className="w-full flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 py-2.5 text-sm font-semibold text-blue-800 hover:bg-blue-100 transition shadow-sm"
+        >
+          <span>Continue as Guest Demo Analyst</span>
+          <ArrowRight className="h-4 w-4" />
+        </button>
+
         <p className="mt-6 text-center text-xs text-slate-500">
           Already registered?{' '}
           <Link to="/login" className="font-semibold text-blue-600 hover:underline">
             Sign in here
           </Link>
         </p>
+
+        {!isFirebaseActive && (
+          <div className="mt-4 rounded-lg bg-amber-50 p-2.5 text-center text-[11px] text-amber-800 border border-amber-200">
+            Note: Firebase credentials not yet set in frontend .env. Guest Demo Access is enabled for immediate testing.
+          </div>
+        )}
       </div>
     </div>
   );

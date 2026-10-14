@@ -6,7 +6,10 @@ import {
   AnalysisHistoryItem
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== 'undefined' && (window.location.hostname.endsWith('web.app') || window.location.hostname.endsWith('firebaseapp.com'))
+    ? 'https://energisense-ai.onrender.com'
+    : 'http://127.0.0.1:8000');
 
 class ApiService {
   private getHeaders(token: string | null = null, isJson = true): HeadersInit {

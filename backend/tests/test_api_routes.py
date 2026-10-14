@@ -4,13 +4,19 @@ from app.main import app
 
 client = TestClient(app)
 
+from pathlib import Path
+
+SAMPLE_DATA_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "sample_energy_data.csv"
+if not SAMPLE_DATA_PATH.exists():
+    SAMPLE_DATA_PATH = Path("data/sample_energy_data.csv")
+
 def test_full_api_workflow():
     # 1. Health check
     res_health = client.get("/health")
     assert res_health.status_code == 200
 
     # 2. Upload CSV
-    csv_bytes = open("data/sample_energy_data.csv", "rb").read()
+    csv_bytes = open(SAMPLE_DATA_PATH, "rb").read()
     files = {"file": ("sample_energy_data.csv", csv_bytes, "text/csv")}
     headers = {"Authorization": "Bearer demo-token-test-user"}
     

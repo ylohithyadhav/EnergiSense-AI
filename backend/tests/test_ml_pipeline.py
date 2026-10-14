@@ -16,8 +16,14 @@ def test_engineer_time_features():
     assert df_feat["is_weekend"].iloc[0] == 0
     assert df_feat["is_weekend"].iloc[1] == 1
 
+from pathlib import Path
+
+SAMPLE_DATA_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "sample_energy_data.csv"
+if not SAMPLE_DATA_PATH.exists():
+    SAMPLE_DATA_PATH = Path("data/sample_energy_data.csv")
+
 def test_train_lightgbm_pipeline_on_sample_data():
-    df = pd.read_csv("data/sample_energy_data.csv")
+    df = pd.read_csv(SAMPLE_DATA_PATH)
     result = train_lightgbm_pipeline(
         df=df,
         timestamp_col="timestamp",

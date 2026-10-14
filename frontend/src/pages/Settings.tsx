@@ -44,7 +44,7 @@ export const Settings: React.FC = () => {
           <div className="space-y-2 text-xs">
             <div className="flex justify-between py-1 border-b border-slate-100">
               <span className="text-slate-500">Base API URL:</span>
-              <span className="font-mono text-slate-800">{import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'}</span>
+              <span className="font-mono text-slate-800">{import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && (window.location.hostname.endsWith('web.app') || window.location.hostname.endsWith('firebaseapp.com')) ? 'https://energisense-ai.onrender.com' : 'http://127.0.0.1:8000')}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-100">
               <span className="text-slate-500">Health Status:</span>
