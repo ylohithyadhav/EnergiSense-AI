@@ -64,7 +64,7 @@ export const AnomalyDetails: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-navy-900">Granular Anomaly Investigation</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Granular Anomaly Investigation</h1>
           <p className="mt-1 text-sm text-slate-500">
             Per-interval residual analysis, severity scores, and facility triage guidance.
           </p>
@@ -152,7 +152,7 @@ export const AnomalyDetails: React.FC = () => {
           </div>
 
           {/* Anomaly Records Table */}
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden min-w-0">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 text-slate-600 uppercase border-b border-slate-200 font-semibold">

@@ -138,10 +138,10 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-navy-900">Smart Building Energy Analytics Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Smart Building Energy Analytics Dashboard</h1>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500">
             Regime-Aware machine learning for load forecasting, anomaly triage, and energy efficiency.
           </p>
         </div>
@@ -258,11 +258,11 @@ export const Dashboard: React.FC = () => {
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
-            <div className="h-72 w-full mt-4">
+            <div className="h-64 sm:h-72 w-full mt-4 min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={activeTrain.actual_vs_predicted_preview}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} tickFormatter={(ts) => ts.split(' ')[1] || ts} />
+                  <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} tickFormatter={(ts) => ts.split(' ')[1] || ts} minTickGap={15} />
                   <YAxis tick={{ fontSize: 10 }} unit=" kWh" />
                   <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
                   <Legend wrapperStyle={{ fontSize: '12px' }} />
@@ -279,7 +279,7 @@ export const Dashboard: React.FC = () => {
             <p className="text-xs text-slate-500 mb-4">
               Area trace visualizing the total smart building energy trajectory across time.
             </p>
-            <div className="h-56 w-full">
+            <div className="h-48 sm:h-56 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={activeTrain.actual_vs_predicted_preview}>
                   <defs>
@@ -289,7 +289,7 @@ export const Dashboard: React.FC = () => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} tickFormatter={(ts) => ts.split(' ')[1] || ts} />
+                  <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} tickFormatter={(ts) => ts.split(' ')[1] || ts} minTickGap={15} />
                   <YAxis tick={{ fontSize: 10 }} unit=" kWh" />
                   <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
                   <Area type="monotone" dataKey="actual_energy" name="Telemetry Load (kWh)" stroke="#0891b2" fillOpacity={1} fill="url(#colorEnergy)" />
@@ -299,14 +299,14 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Charts Row: Chart 3 (Normal vs Anomalous) & Chart 4 (Anomalies by Building) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Chart 3: Normal vs Anomalous Observations */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
               <h2 className="text-base font-bold text-navy-900 mb-1">3. Normal vs Anomalous Observations</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Proportion of normal operations versus flagged abnormal deviations.
               </p>
-              <div className="h-64 w-full flex items-center justify-center">
+              <div className="h-64 w-full flex items-center justify-center min-w-0">
                 {normalVsAnomalyData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -315,10 +315,10 @@ export const Dashboard: React.FC = () => {
                         dataKey="value"
                         nameKey="name"
                         cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={80}
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+                        cy="45%"
+                        innerRadius={40}
+                        outerRadius={65}
+                        label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                         labelLine={false}
                       >
                         {normalVsAnomalyData.map((entry, index) => (
@@ -326,6 +326,7 @@ export const Dashboard: React.FC = () => {
                         ))}
                       </Pie>
                       <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                      <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -337,7 +338,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Chart 4: Anomalies by Building */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-1">
                 <h2 className="text-base font-bold text-navy-900">4. Anomalies Flagged by Building</h2>
                 {activeAnomaly && (
@@ -349,12 +350,12 @@ export const Dashboard: React.FC = () => {
               <p className="text-xs text-slate-500 mb-4">
                 Facility meters exhibiting the highest frequency of abnormal consumption.
               </p>
-              <div className="h-64 w-full">
+              <div className="h-64 w-full min-w-0">
                 {buildingAnomalyData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={buildingAnomalyData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis dataKey="building" tick={{ fontSize: 9 }} />
+                      <XAxis dataKey="building" tick={{ fontSize: 9 }} interval={0} angle={-15} textAnchor="end" height={40} />
                       <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
                       <Bar dataKey="count" name="Anomalous Events" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -370,14 +371,14 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Charts Row: Chart 5 (Operating Regime) & Chart 6 (Detection Method Comparison) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Chart 5: Operating Regime Distribution */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
               <h2 className="text-base font-bold text-navy-900 mb-1">5. Operating Regime Distribution</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Proportion of data categorized by occupancy schedule and thermal cooling stress.
               </p>
-              <div className="h-64 w-full flex items-center justify-center">
+              <div className="h-64 w-full flex items-center justify-center min-w-0">
                 {regimeData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -386,8 +387,8 @@ export const Dashboard: React.FC = () => {
                         dataKey="value"
                         nameKey="name"
                         cx="50%"
-                        cy="50%"
-                        outerRadius={80}
+                        cy="45%"
+                        outerRadius={65}
                         label={({ name, percent }) => `${name.split('_')[0]} (${(percent * 100).toFixed(0)}%)`}
                         labelLine={false}
                       >
@@ -396,6 +397,7 @@ export const Dashboard: React.FC = () => {
                         ))}
                       </Pie>
                       <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                      <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -407,17 +409,17 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Chart 6: Detection Method Comparison */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
               <h2 className="text-base font-bold text-navy-900 mb-1">6. Detection Method Comparison</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Comparative anomaly discoveries across Global, Rolling, Isolation Forest, and Regime-Aware.
               </p>
-              <div className="h-64 w-full">
+              <div className="h-64 w-full min-w-0">
                 {methodComparisonData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={methodComparisonData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis dataKey="method" tick={{ fontSize: 9 }} interval={0} />
+                      <XAxis dataKey="method" tick={{ fontSize: 9 }} interval={0} angle={-15} textAnchor="end" height={45} />
                       <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
                       <Bar dataKey="count" name="Flagged Instances" fill="#3b82f6" radius={[4, 4, 0, 0]} />
@@ -433,19 +435,19 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Charts Row: Chart 7 (Feature Importance) & Chart 8 (Energy Usage by Hour) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Chart 7: Feature Importance */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
               <h2 className="text-base font-bold text-navy-900 mb-1">7. Feature Importance (LightGBM Gain)</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Most influential predictors driving smart building load forecasting.
               </p>
-              <div className="h-64 w-full">
+              <div className="h-64 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activeTrain.feature_importances.slice(0, 8)} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis type="number" tick={{ fontSize: 10 }} />
-                    <YAxis dataKey="feature" type="category" width={110} tick={{ fontSize: 9 }} />
+                    <YAxis dataKey="feature" type="category" width={85} tick={{ fontSize: 9 }} />
                     <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
                     <Bar dataKey="importance" name="Relative Gain" fill="#2563eb" radius={[0, 4, 4, 0]} />
                   </BarChart>
@@ -454,16 +456,16 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Chart 8: Hourly Energy Usage Profile */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
               <h2 className="text-base font-bold text-navy-900 mb-1">8. Diurnal Energy Usage Profile</h2>
               <p className="text-xs text-slate-500 mb-4">
                 Average consumption by time of day across the evaluated intervals.
               </p>
-              <div className="h-64 w-full">
+              <div className="h-64 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={hourlyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="hour" tick={{ fontSize: 10 }} />
+                    <XAxis dataKey="hour" tick={{ fontSize: 10 }} minTickGap={10} />
                     <YAxis tick={{ fontSize: 10 }} unit=" kWh" />
                     <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
                     <Line type="monotone" dataKey="avgEnergy" name="Average Load (kWh)" stroke="#06b6d4" strokeWidth={2.5} dot={{ r: 3 }} />

@@ -75,35 +75,60 @@ export const Navbar: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Close on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen]);
+
+  // Lock background scroll when mobile drawer is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-3 sm:px-6 backdrop-blur">
+      <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-2.5 sm:px-6 backdrop-blur">
         {/* Left: Hamburger & Brand */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           {/* Mobile Hamburger Toggle Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-            className="md:hidden flex items-center justify-center h-10 w-10 rounded-lg text-slate-700 hover:text-navy-900 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-blue-600"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-navigation-drawer"
+            className="md:hidden flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-lg text-slate-700 hover:text-navy-900 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-blue-600 flex-shrink-0"
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
           {/* Brand Logo & Title */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-navy-900 shadow-sm flex-shrink-0">
-              <img src="/logo.svg" alt="EnergiSense AI" className="h-6 w-6 sm:h-7 sm:w-7" />
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-navy-900 shadow-sm flex-shrink-0">
+              <img src="/logo.svg" alt="EnergiSense AI" className="h-5 w-5 sm:h-7 sm:w-7" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-base sm:text-lg font-bold tracking-tight text-navy-900 truncate">
+                <span className="text-sm xs:text-base sm:text-lg font-bold tracking-tight text-navy-900 truncate">
                   EnergiSense AI
                 </span>
-                <span className="hidden sm:inline-block rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-800">
+                <span className="hidden sm:inline-block rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-800 flex-shrink-0">
                   ML 2.0
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-slate-500 hidden sm:block">
+              <p className="text-[11px] font-medium text-slate-500 hidden lg:block truncate">
                 Predict Smart. Detect Early. Save Energy.
               </p>
             </div>
@@ -111,51 +136,51 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Right: Backend Status & Profile */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
           {/* Backend Status Pill */}
-          <div className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-slate-200 bg-slate-50 px-2 sm:px-3 py-1 text-xs">
+          <div className="flex items-center gap-1 sm:gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 sm:px-2.5 py-1 text-xs">
             <button 
               onClick={checkStatus} 
               title="Refresh backend status"
-              className="hover:rotate-180 transition-transform duration-300 p-0.5"
+              className="hover:rotate-180 transition-transform duration-300 p-0.5 flex-shrink-0"
             >
               <RefreshCw className="h-3 w-3 text-slate-400 hover:text-slate-600" />
             </button>
             {backendStatus === 'checking' && (
-              <span className="flex items-center gap-1.5 text-slate-500 text-[11px] sm:text-xs">
-                <span className="h-2 w-2 rounded-full bg-slate-400 animate-pulse" />
+              <span className="flex items-center gap-1 text-slate-500 text-[11px]">
+                <span className="h-2 w-2 rounded-full bg-slate-400 animate-pulse flex-shrink-0" />
                 <span className="hidden sm:inline">Checking API...</span>
-                <span className="sm:hidden">Checking</span>
+                <span className="hidden xs:inline sm:hidden">Checking</span>
               </span>
             )}
             {backendStatus === 'live' && (
-              <span className="flex items-center gap-1.5 text-emerald-700 font-medium text-[11px] sm:text-xs">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="flex items-center gap-1 text-emerald-700 font-medium text-[11px]">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
                 <span className="hidden sm:inline">API Online</span>
-                <span className="sm:hidden">Online</span>
+                <span className="hidden xs:inline sm:hidden">Online</span>
               </span>
             )}
             {backendStatus === 'cold-start' && (
-              <span className="flex items-center gap-1.5 text-amber-700 font-medium text-[11px] sm:text-xs" title="Free tier Render container is waking up">
-                <span className="h-2 w-2 rounded-full bg-amber-500 animate-ping" />
+              <span className="flex items-center gap-1 text-amber-700 font-medium text-[11px]" title="Free tier Render container is waking up">
+                <span className="h-2 w-2 rounded-full bg-amber-500 animate-ping flex-shrink-0" />
                 <span className="hidden sm:inline">Render Cold Start</span>
-                <span className="sm:hidden">Waking</span>
+                <span className="hidden xs:inline sm:hidden">Waking</span>
               </span>
             )}
             {backendStatus === 'offline' && (
-              <span className="flex items-center gap-1.5 text-rose-700 font-medium text-[11px] sm:text-xs" title="Backend unreachable">
-                <span className="h-2 w-2 rounded-full bg-rose-500" />
+              <span className="flex items-center gap-1 text-rose-700 font-medium text-[11px]" title="Backend unreachable">
+                <span className="h-2 w-2 rounded-full bg-rose-500 flex-shrink-0" />
                 <span className="hidden sm:inline">API Offline</span>
-                <span className="sm:hidden">Offline</span>
+                <span className="hidden xs:inline sm:hidden">Offline</span>
               </span>
             )}
           </div>
 
           {/* User Profile & Logout */}
           {currentUser && (
-            <div className="flex items-center gap-2 sm:gap-3 border-l border-slate-200 pl-2 sm:pl-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-navy-800 text-xs font-semibold text-white">
+            <div className="flex items-center gap-1 sm:gap-2.5 border-l border-slate-200 pl-1.5 sm:pl-3">
+              <div className="flex items-center gap-1.5">
+                <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-navy-800 text-xs font-semibold text-white flex-shrink-0">
                   {currentUser.displayName ? currentUser.displayName[0].toUpperCase() : 'U'}
                 </div>
                 <div className="hidden md:block text-left">
@@ -171,7 +196,7 @@ export const Navbar: React.FC = () => {
               <button
                 onClick={() => logout()}
                 title="Sign Out"
-                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-rose-600 transition-colors"
+                className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-rose-600 transition-colors flex-shrink-0"
               >
                 <LogOut className="h-4 w-4" />
               </button>
@@ -182,7 +207,7 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Navigation Drawer & Backdrop */}
       {isMobileMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden" id="mobile-navigation-drawer" role="dialog" aria-modal="true">
           {/* Backdrop */}
           <div
             onClick={() => setIsMobileMenuOpen(false)}
@@ -227,7 +252,7 @@ export const Navbar: React.FC = () => {
                         to={item.to}
                         onClick={() => setIsMobileMenuOpen(false)}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                          `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
                             isActive
                               ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
                               : 'text-slate-300 hover:bg-navy-800 hover:text-white'
@@ -257,7 +282,7 @@ export const Navbar: React.FC = () => {
             {/* Drawer User Footer */}
             <div className="p-4 border-t border-navy-800 bg-navy-950/60">
               {currentUser && (
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-navy-800 text-xs font-semibold text-white border border-navy-700 flex-shrink-0">
                       {currentUser.displayName ? currentUser.displayName[0].toUpperCase() : 'U'}
@@ -273,7 +298,7 @@ export const Navbar: React.FC = () => {
                       logout();
                     }}
                     title="Sign Out"
-                    className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-navy-800 transition"
+                    className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-navy-800 transition flex-shrink-0"
                   >
                     <LogOut className="h-4 w-4" />
                   </button>

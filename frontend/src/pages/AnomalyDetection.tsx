@@ -14,7 +14,8 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Legend
 } from 'recharts';
 import {
   AlertTriangle,
@@ -78,7 +79,7 @@ export const AnomalyDetection: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-navy-900">Multi-Method Anomaly Detection</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Multi-Method Anomaly Detection</h1>
           <p className="mt-1 text-sm text-slate-500">
             Compare Global, Rolling, Isolation Forest, and Proposed Regime-Aware Adaptive thresholding.
           </p>
@@ -213,7 +214,7 @@ export const AnomalyDetection: React.FC = () => {
       {activeAnomaly && !loading && (
         <div className="space-y-6">
           {/* Method Comparison Table */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
               <h2 className="text-base font-bold text-navy-900">Comparative Method Evaluation Benchmark</h2>
               <span className={`px-2.5 py-1 rounded-full text-xs font-semibold self-start sm:self-auto ${
@@ -280,18 +281,18 @@ export const AnomalyDetection: React.FC = () => {
           </div>
 
           {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Detection Count Bar Chart */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
               <h2 className="text-base font-bold text-navy-900 mb-2">Anomalies Detected Across Methods</h2>
               <p className="text-xs text-slate-500 mb-6">
                 Comparative count of anomalous instances flagged in the held-out test partition.
               </p>
-              <div className="h-64 w-full">
+              <div className="h-64 sm:h-72 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activeAnomaly.method_comparison}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="method_name" tick={{ fontSize: 9 }} interval={0} angle={-10} textAnchor="end" height={45} />
+                    <XAxis dataKey="method_name" tick={{ fontSize: 9 }} interval={0} angle={-15} textAnchor="end" height={50} />
                     <YAxis tick={{ fontSize: 10 }} />
                     <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
                     <Bar dataKey="anomalies_detected" name="Detected Anomalies" fill="#2563eb" radius={[4, 4, 0, 0]} />
@@ -301,12 +302,12 @@ export const AnomalyDetection: React.FC = () => {
             </div>
 
             {/* Operating Regime Breakdown */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
               <h2 className="text-base font-bold text-navy-900 mb-2">Operating Regime Distribution</h2>
               <p className="text-xs text-slate-500 mb-6">
                 Distribution of building operation states (Occupied Peak, Off-Hours Night, Weekend, Thermal Load).
               </p>
-              <div className="h-64 w-full flex items-center justify-center">
+              <div className="h-64 sm:h-72 w-full min-w-0 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -314,9 +315,9 @@ export const AnomalyDetection: React.FC = () => {
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={({ name, percent }) => `${name.split('_')[0]} (${(percent * 100).toFixed(0)}%)`}
+                      cy="45%"
+                      outerRadius={65}
+                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                       labelLine={false}
                     >
                       {regimeChartData.map((_, index) => (
@@ -324,6 +325,7 @@ export const AnomalyDetection: React.FC = () => {
                       ))}
                     </Pie>
                     <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

@@ -63,7 +63,7 @@ export const ResearchBenchmark: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-navy-900">Research Benchmark Reference</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Research Benchmark Reference</h1>
           <p className="mt-1 text-sm text-slate-500">
             LEAD 1.0 Empirical Reference Performance on 30 Deterministically Selected Smart Buildings.
           </p>
@@ -115,7 +115,7 @@ export const ResearchBenchmark: React.FC = () => {
       </div>
 
       {/* Energy Prediction Comparison */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
         <h2 className="text-base font-bold text-navy-900 mb-2">1. Energy Prediction Accuracy (LEAD 1.0)</h2>
         <p className="text-xs text-slate-500 mb-4">
           LightGBM regression achieves a significant error reduction over the standard persistence baseline.
@@ -146,7 +146,7 @@ export const ResearchBenchmark: React.FC = () => {
             </table>
           </div>
 
-          <div className="h-48 w-full">
+          <div className="h-48 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={energyPredictionData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -163,7 +163,7 @@ export const ResearchBenchmark: React.FC = () => {
       </div>
 
       {/* Anomaly Detection Comparison Table */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden min-w-0">
         <h2 className="text-base font-bold text-navy-900 mb-2">2. Anomaly Detection Method Comparison (LEAD 1.0 Test Set)</h2>
         <p className="text-xs text-slate-500 mb-6">
           Rigorous comparison across all four methods. Accurately note trade-offs: the Proposed Regime-Aware method delivers the highest Precision (0.372) and ROC-AUC (0.722) while minimizing False Positives (6.49 / 1k), whereas Isolation Forest achieves higher Recall (0.189) and F1-score (0.232).

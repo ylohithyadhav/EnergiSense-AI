@@ -39,7 +39,7 @@ export const AnalysisHistory: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-navy-900">Analysis & Evaluation History</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Analysis & Evaluation History</h1>
           <p className="mt-1 text-sm text-slate-500">
             Persistent records of your trained models, evaluated datasets, and detected anomalies.
           </p>
@@ -73,7 +73,7 @@ export const AnalysisHistory: React.FC = () => {
       )}
 
       {!loading && history.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden min-w-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 text-slate-600 uppercase border-b border-slate-200 font-semibold">

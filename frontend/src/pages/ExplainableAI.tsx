@@ -79,7 +79,7 @@ export const ExplainableAI: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-navy-900">Explainable AI (SHAP TreeExplainer)</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Explainable AI (SHAP TreeExplainer)</h1>
           <p className="mt-1 text-sm text-slate-500">
             Shapley Additive Explanations attributing LightGBM predictions to physical & meteorological drivers.
           </p>
@@ -129,7 +129,7 @@ export const ExplainableAI: React.FC = () => {
         <div className="space-y-6">
           {/* Individual Instance Explanation Box */}
           {activeSHAP.individual_explanation && (
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
                 <div>
                   <h2 className="text-base font-bold text-navy-900">
@@ -169,12 +169,12 @@ export const ExplainableAI: React.FC = () => {
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                 Feature Contribution Push (Δ kWh relative to Base Expected Value {activeSHAP.base_value} kWh)
               </h3>
-              <div className="h-64 w-full">
+              <div className="h-64 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activeSHAP.individual_explanation.contributions} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis type="number" tick={{ fontSize: 10 }} unit=" kWh" />
-                    <YAxis dataKey="feature" type="category" width={110} tick={{ fontSize: 9 }} />
+                    <YAxis dataKey="feature" type="category" width={85} tick={{ fontSize: 9 }} />
                     <Tooltip
                       contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }}
                       formatter={(val: any) => [`${val > 0 ? '+' : ''}${val} kWh`, 'SHAP Impact']}
@@ -202,18 +202,18 @@ export const ExplainableAI: React.FC = () => {
           )}
 
           {/* Global SHAP Feature Importance */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
             <h2 className="text-base font-bold text-navy-900 mb-2">Global Feature Importance (Mean |SHAP Value|)</h2>
             <p className="text-xs text-slate-500 mb-6">
               Average magnitude of impact across evaluation dataset. Demonstrates which external drivers most significantly steer predictions.
             </p>
 
-            <div className="h-64 w-full">
+            <div className="h-64 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={activeSHAP.global_importance} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis type="number" tick={{ fontSize: 10 }} />
-                  <YAxis dataKey="feature" type="category" width={110} tick={{ fontSize: 9 }} />
+                  <YAxis dataKey="feature" type="category" width={85} tick={{ fontSize: 9 }} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }}
                   />

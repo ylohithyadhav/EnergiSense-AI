@@ -83,7 +83,7 @@ export const EnergyPrediction: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-navy-900">Energy Consumption Prediction</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Energy Consumption Prediction</h1>
           <p className="mt-1 text-sm text-slate-500">
             Train chronologically-isolated LightGBM gradient boosted decision trees.
           </p>
@@ -229,17 +229,17 @@ export const EnergyPrediction: React.FC = () => {
           </div>
 
           {/* Actual vs Predicted Interactive Chart */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
             <h2 className="text-base font-bold text-navy-900 mb-2">Chronological Prediction Trace: Actual vs Predicted Load</h2>
             <p className="text-xs text-slate-500 mb-6">
               Hourly comparison across test intervals. Divergence indicates unexpected energy consumption anomalies.
             </p>
 
-            <div className="h-80 w-full">
+            <div className="h-72 sm:h-80 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={activeTrain.actual_vs_predicted_preview}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} tickFormatter={(ts) => ts.split(' ')[1] || ts} />
+                  <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} tickFormatter={(ts) => ts.split(' ')[1] || ts} minTickGap={15} />
                   <YAxis tick={{ fontSize: 10 }} unit=" kWh" />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }}
@@ -268,18 +268,18 @@ export const EnergyPrediction: React.FC = () => {
           </div>
 
           {/* Feature Importance Chart */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
             <h2 className="text-base font-bold text-navy-900 mb-2">LightGBM Model Feature Importance (Normalized Gain)</h2>
             <p className="text-xs text-slate-500 mb-6">
               Relative contribution of meteorological factors, occupancy profiles, and temporal cyclics.
             </p>
 
-            <div className="h-64 w-full">
+            <div className="h-64 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={activeTrain.feature_importances} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis type="number" tick={{ fontSize: 10 }} />
-                  <YAxis dataKey="feature" type="category" width={110} tick={{ fontSize: 9 }} />
+                  <YAxis dataKey="feature" type="category" width={85} tick={{ fontSize: 9 }} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }}
                   />
@@ -290,7 +290,7 @@ export const EnergyPrediction: React.FC = () => {
           </div>
 
           {/* Preview Table */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden min-w-0">
             <h2 className="text-base font-bold text-navy-900 mb-4">Sample Test Observations & Residuals Preview</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">

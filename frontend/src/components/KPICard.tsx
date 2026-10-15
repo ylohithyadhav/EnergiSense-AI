@@ -52,15 +52,15 @@ export const KPICard: React.FC<KPICardProps> = ({
   const style = variantStyles[variant];
 
   return (
-    <div className={`rounded-xl border p-4 sm:p-5 shadow-sm transition-all hover:shadow-md min-w-0 ${style.bg}`}>
+    <div className={`rounded-xl border p-3.5 sm:p-5 shadow-sm transition-all hover:shadow-md min-w-0 ${style.bg}`}>
       <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 truncate" title={title}>{title}</p>
-        <div className={`rounded-lg p-2 sm:p-2.5 ${style.iconBg} shadow-sm flex-shrink-0`}>
+        <div className={`rounded-lg p-1.5 sm:p-2.5 ${style.iconBg} shadow-sm flex-shrink-0`}>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
       </div>
-      <div className="mt-2.5 sm:mt-3">
-        <h3 className={`text-xl sm:text-2xl font-bold tracking-tight truncate ${style.text}`} title={String(value || '')}>
+      <div className="mt-2 sm:mt-3">
+        <h3 className={`text-lg sm:text-2xl font-bold tracking-tight truncate ${style.text}`} title={String(value || '')}>
           {value !== null && value !== undefined && value !== '' ? value : 'N/A'}
         </h3>
         {subtitle && (

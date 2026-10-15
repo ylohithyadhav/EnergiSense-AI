@@ -25,9 +25,9 @@ export const Settings: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl min-w-0">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-navy-900">Application Configuration & Environment</h1>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Application Configuration & Environment</h1>
         <p className="mt-1 text-sm text-slate-500">
           Backend API endpoints, Firebase services, and zero-cost cloud architecture settings.
         </p>
@@ -36,7 +36,7 @@ export const Settings: React.FC = () => {
       {/* Cloud Environment Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Backend API Box */}
-        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
           <div className="flex items-center gap-2 mb-3">
             <Server className="h-5 w-5 text-blue-600" />
             <h2 className="text-sm font-bold text-navy-900">Python ML Backend Service</h2>
@@ -64,7 +64,7 @@ export const Settings: React.FC = () => {
         </div>
 
         {/* Firebase Services Box */}
-        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
           <div className="flex items-center gap-2 mb-3">
             <Database className="h-5 w-5 text-amber-500" />
             <h2 className="text-sm font-bold text-navy-900">Firebase Cloud Services</h2>
@@ -93,18 +93,18 @@ export const Settings: React.FC = () => {
       </div>
 
       {/* User Session Box */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
         <h2 className="text-sm font-bold text-navy-900 mb-3">Active Authenticated Analyst Profile</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 min-w-0">
             <span className="text-slate-500 block">User UID:</span>
             <span className="font-mono text-slate-800 font-semibold break-all">{currentUser?.uid}</span>
           </div>
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 min-w-0">
             <span className="text-slate-500 block">Email:</span>
-            <span className="text-slate-800 font-semibold">{currentUser?.email}</span>
+            <span className="text-slate-800 font-semibold break-all">{currentUser?.email}</span>
           </div>
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 min-w-0">
             <span className="text-slate-500 block">Access Mode:</span>
             <span className="text-blue-700 font-semibold">{currentUser?.isDemo ? 'Guest Analyst (Local)' : 'Firebase Authenticated'}</span>
           </div>
@@ -112,7 +112,7 @@ export const Settings: React.FC = () => {
       </div>
 
       {/* Architecture Citation & Academic Project Info */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
         <h2 className="text-sm font-bold text-navy-900 mb-2">Project Specification</h2>
         <p className="text-xs text-slate-600 leading-relaxed">
           <strong>Title:</strong> A Regime-Aware Explainable Machine Learning Framework for Energy Prediction and Anomaly Detection in Smart Buildings.<br />

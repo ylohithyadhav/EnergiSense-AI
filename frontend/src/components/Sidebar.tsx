@@ -27,7 +27,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="hidden md:flex w-64 flex-shrink-0 bg-navy-900 text-slate-300 flex-col justify-between min-h-[calc(100vh-4rem)] border-r border-navy-800">
+    <aside className="hidden md:flex w-56 lg:w-64 flex-shrink-0 bg-navy-900 text-slate-300 flex-col justify-between min-h-[calc(100vh-4rem)] border-r border-navy-800">
       <div className="p-4 space-y-6">
         <div>
           <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">

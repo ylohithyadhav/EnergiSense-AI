@@ -147,7 +147,7 @@ export const DatasetUpload: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-navy-900">Dataset Ingestion & Validation</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Dataset Ingestion & Validation</h1>
           <p className="mt-1 text-sm text-slate-500">
             Upload commercial or institutional smart building hourly CSV energy telemetry.
           </p>
@@ -219,19 +219,19 @@ export const DatasetUpload: React.FC = () => {
         <div className="space-y-6">
           {/* Summary KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm min-w-0">
               <p className="text-xs text-slate-500 uppercase font-semibold">Total Records</p>
               <p className="mt-1 text-2xl font-bold text-navy-900">{activeUpload.total_rows.toLocaleString()}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm min-w-0">
               <p className="text-xs text-slate-500 uppercase font-semibold">Total Columns</p>
               <p className="mt-1 text-2xl font-bold text-navy-900">{activeUpload.total_columns}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm min-w-0">
               <p className="text-xs text-slate-500 uppercase font-semibold">Identified Target</p>
               <p className="mt-1 text-lg font-bold text-blue-600 truncate">{targetCol || 'Unassigned'}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm min-w-0">
               <p className="text-xs text-slate-500 uppercase font-semibold">Input Features</p>
               <p className="mt-1 text-2xl font-bold text-emerald-600">{selectedFeatures.length}</p>
             </div>
@@ -335,7 +335,7 @@ export const DatasetUpload: React.FC = () => {
           </div>
 
           {/* Dataset Inspection Table */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden min-w-0">
             <h2 className="text-base font-bold text-navy-900 mb-4">Dataset Columns Inspection & Missing Value Audit</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
