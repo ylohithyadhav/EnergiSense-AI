@@ -157,6 +157,8 @@ class IndividualExplanation(BaseModel):
     base_value: float
     contributions: List[SHAPContribution]
     text_summary: str
+    all_contributions_sum: Optional[float] = None
+    additivity_residual: Optional[float] = None
 
 class SHAPExplainResponse(BaseModel):
     analysis_id: str

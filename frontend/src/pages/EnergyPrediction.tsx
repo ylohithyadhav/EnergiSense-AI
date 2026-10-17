@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   BarChart2
 } from 'lucide-react';
+import { formatFeatureLabel } from './ExplainableAI';
 
 export const EnergyPrediction: React.FC = () => {
   const { getIdToken } = useAuth();
@@ -281,14 +282,46 @@ export const EnergyPrediction: React.FC = () => {
               Relative contribution of meteorological factors, occupancy profiles, and temporal cyclics.
             </p>
 
-            <div className="h-64 w-full min-w-0">
+            <div className="h-64 sm:h-72 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={activeTrain.feature_importances} layout="vertical">
+                <BarChart
+                  data={activeTrain.feature_importances.map(item => ({
+                    ...item,
+                    percentage: Number(((Number(item.importance) || 0) * 100).toFixed(1)),
+                    formattedFeature: formatFeatureLabel(item.feature)
+                  }))}
+                  layout="vertical"
+                  margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: axisTickColor }} />
-                  <YAxis dataKey="feature" type="category" width={85} tick={{ fontSize: 9, fill: axisTickColor }} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="importance" name="Relative Gain" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                  <XAxis
+                    type="number"
+                    unit="%"
+                    domain={[0, 'dataMax + 5']}
+                    tick={{ fontSize: 10, fill: axisTickColor }}
+                  />
+                  <YAxis
+                    dataKey="feature"
+                    type="category"
+                    width={130}
+                    tick={{ fontSize: 9, fill: axisTickColor }}
+                    tickFormatter={formatFeatureLabel}
+                  />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    formatter={(val: any, name: any, item: any) => [
+                      `${item?.payload?.percentage}% (Normalized Gain: ${item?.payload?.importance})`,
+                      item?.payload?.formattedFeature || 'Feature'
+                    ]}
+                  />
+                  <Bar
+                    dataKey="percentage"
+                    name="Relative Gain"
+                    fill="#3b82f6"
+                    radius={[0, 4, 4, 0]}
+                    barSize={16}
+                    minPointSize={3}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>

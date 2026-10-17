@@ -49,17 +49,22 @@ def generate_investigation_steps(row: pd.Series, regime: str, severity: str) -> 
     residual = row.get("residual", 0.0)
     bldg = row.get("building_id", "Building")
     
-    if "Night" in regime or "Weekend" in regime:
-        if residual > 0:
-            return f"Inspect off-hours baseload in {bldg}. Check BAS/BMS schedules for HVAC fans or lighting left running."
-        else:
-            return f"Verify meter/sensor connectivity for {bldg}. Reading dropped below expected night baseline."
-    elif "HighCooling" in regime:
-        return f"Thermal peak stress in {bldg}. Verify chiller COP, condenser water loop temperature, and VAV damper airflow."
-    elif severity == "Critical":
-        return f"Severe consumption deviation ({residual:+.1f} kWh). Immediate facility walk-through and breaker telemetry audit recommended."
+    if severity == "Normal":
+        return f"Residual within normal expected bounds for {regime} ({residual:+.1f} kWh). Normal operations."
+    
+    if residual < 0:
+        if abs(residual) >= 20.0 or severity == "Critical":
+            return f"Critical load deficit in {bldg} ({residual:+.1f} kWh). Inspect smart meter telemetry, sub-panel CTs, or unmetered sub-load disconnect."
+        return f"Unusual load drop in {bldg} ({residual:+.1f} kWh). Verify meter calibration, sensor connectivity, or scheduled equipment shutdown."
     else:
-        return f"Moderate deviation during {regime}. Monitor subsequent hourly intervals for persistence."
+        if "Night" in regime or "Weekend" in regime:
+            return f"Off-hours baseload runaway in {bldg} ({residual:+.1f} kWh). Audit BAS/BMS schedules for HVAC fans or lighting left active."
+        elif "HighCooling" in regime:
+            return f"Thermal peak stress in {bldg} ({residual:+.1f} kWh). Verify chiller COP, condenser water loop temperature, and VAV airflow dampers."
+        elif severity == "Critical":
+            return f"Severe consumption surge ({residual:+.1f} kWh) in {bldg}. Immediate facility walk-through and breaker telemetry audit recommended."
+        else:
+            return f"Elevated consumption during {regime} ({residual:+.1f} kWh). Monitor subsequent hourly intervals for persistence."
 
 def run_anomaly_detection_pipeline(
     analysis_id: str,
@@ -90,18 +95,21 @@ def run_anomaly_detection_pipeline(
     # ========================================================
     # METHOD 1: GLOBAL RESIDUAL THRESHOLD
     # Derived strictly from validation residuals (no test leakage)
+    # Detects bidirectional deviations: consumption surge or drop
     # ========================================================
     val_res_mean = float(np.mean(val_residuals))
     val_res_std = float(np.std(val_residuals)) + 1e-6
-    global_thresh = val_res_mean + (global_sigma * val_res_std)
+    global_delta = global_sigma * val_res_std
+    global_thresh_upper = val_res_mean + global_delta
+    global_thresh_lower = val_res_mean - global_delta
     
-    # Flags if positive residual exceeds threshold (consumption runaway)
-    flags_global = (test_residuals > global_thresh).astype(int)
-    scores_global = np.clip((test_residuals - val_res_mean) / val_res_std, 0, 10)
+    flags_global = ((test_residuals > global_thresh_upper) | (test_residuals < global_thresh_lower)).astype(int)
+    scores_global = np.clip(np.abs(test_residuals - val_res_mean) / val_res_std, 0, 10)
 
     # ========================================================
     # METHOD 2: ROLLING RESIDUAL THRESHOLD
     # Rolling window over past residuals per building (strictly past observations)
+    # Detects local surge or baseline drop relative to recent trend
     # ========================================================
     flags_rolling = np.zeros(n_samples, dtype=int)
     scores_rolling = np.zeros(n_samples, dtype=float)
@@ -112,9 +120,12 @@ def run_anomaly_detection_pipeline(
         roll_mean = res_series.rolling(window=rolling_window, min_periods=3).mean().shift(1).fillna(val_res_mean)
         roll_std = res_series.rolling(window=rolling_window, min_periods=3).std().shift(1).fillna(val_res_std)
         
-        dyn_thresh = roll_mean + (rolling_sigma * (roll_std + 1e-6))
-        bldg_flags = (res_series > dyn_thresh).astype(int).values
-        bldg_scores = np.clip((res_series - roll_mean) / (roll_std + 1e-6), 0, 10).values
+        dyn_delta = rolling_sigma * (roll_std + 1e-6)
+        dyn_upper = roll_mean + dyn_delta
+        dyn_lower = roll_mean - dyn_delta
+        
+        bldg_flags = ((res_series > dyn_upper) | (res_series < dyn_lower)).astype(int).values
+        bldg_scores = np.clip(np.abs(res_series - roll_mean) / (roll_std + 1e-6), 0, 10).values
         
         flags_rolling[group.index] = bldg_flags
         scores_rolling[group.index] = bldg_scores
@@ -158,10 +169,13 @@ def run_anomaly_detection_pipeline(
             r_mean = val_res_mean
             r_std = val_res_std
             
+        r_delta = regime_sigma * r_std
         regime_stats[r] = {
             "mean": r_mean,
             "std": r_std,
-            "thresh": r_mean + (regime_sigma * r_std)
+            "delta": r_delta,
+            "thresh_upper": r_mean + r_delta,
+            "thresh_lower": r_mean - r_delta
         }
 
     flags_regime = np.zeros(n_samples, dtype=int)
@@ -170,14 +184,20 @@ def run_anomaly_detection_pipeline(
 
     for i, (_, row) in enumerate(test_meta_df.iterrows()):
         r = row["regime"]
-        stats = regime_stats.get(r, {"mean": val_res_mean, "std": val_res_std, "thresh": global_thresh})
-        thresh = stats["thresh"]
+        stats = regime_stats.get(r, {
+            "mean": val_res_mean,
+            "std": val_res_std,
+            "delta": global_delta,
+            "thresh_upper": global_thresh_upper,
+            "thresh_lower": global_thresh_lower
+        })
+        thresh_delta = stats["delta"]
         res = row["residual"]
-        thresholds_applied[i] = thresh
+        thresholds_applied[i] = thresh_delta
         
-        if res > thresh:
+        if res > stats["thresh_upper"] or res < stats["thresh_lower"]:
             flags_regime[i] = 1
-        scores_regime[i] = np.clip((res - stats["mean"]) / stats["std"], 0, 10)
+        scores_regime[i] = np.clip(np.abs(res - stats["mean"]) / stats["std"], 0, 10)
 
     # Compile Method Comparisons
     methods = [

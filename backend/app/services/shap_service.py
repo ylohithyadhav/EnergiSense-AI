@@ -67,8 +67,12 @@ def compute_shap_explanations(
 
     # 2. Global Mean Absolute SHAP values
     mean_abs_shap = np.mean(np.abs(shap_values), axis=0)
-    total_shap_mass = np.sum(mean_abs_shap) + 1e-9
-    norm_shap = mean_abs_shap / total_shap_mass
+    total_shap_mass = float(np.sum(mean_abs_shap))
+    if total_shap_mass > 1e-9:
+        norm_shap = mean_abs_shap / total_shap_mass
+    else:
+        norm_shap = np.zeros_like(mean_abs_shap, dtype=float)
+        
     if not np.all(np.isfinite(norm_shap)):
         raise RuntimeError("Normalized SHAP importance contains non-finite numbers.")
 
@@ -122,6 +126,10 @@ def compute_shap_explanations(
             f"The primary factor increasing the prediction was '{top_pos}', while '{top_neg}' exerted the largest downward adjustment."
         )
 
+        # Full feature mathematical additivity check: base_value + sum(all_shap) == pred_val
+        all_shap_sum = float(np.sum(single_shap))
+        additivity_res = abs((base_value + all_shap_sum) - pred_val)
+
         individual_exp = {
             "index": idx,
             "building_id": bldg,
@@ -130,7 +138,9 @@ def compute_shap_explanations(
             "predicted_energy": pred_val,
             "base_value": round(base_value, 2),
             "contributions": top_contribs,
-            "text_summary": summary
+            "text_summary": summary,
+            "all_contributions_sum": round(all_shap_sum, 3),
+            "additivity_residual": round(additivity_res, 6)
         }
     except Exception as e:
         logger.warning(f"Could not compute individual SHAP row explanation: {e}")

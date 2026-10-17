@@ -448,3 +448,61 @@ def test_secure_dataset_deletion_security_and_tenant_isolation():
     # 8. Shared reference dataset remains intact on disk
     assert SAMPLE_DATA_PATH.exists()
     assert SAMPLE_DATA_PATH.stat().st_size > 0
+
+
+def test_export_results_csv_authorization_and_formats():
+    """
+    Verifies that GET /api/results/export:
+    1. Rejects unauthenticated callers.
+    2. Rejects unauthorized callers (tenant isolation).
+    3. Works with Authorization: Bearer <token> header.
+    4. Works with ?token=<token> query parameter for direct browser downloads.
+    5. Returns RFC 4180 CSV with all required columns.
+    """
+    alice_headers = {"Authorization": "Bearer demo-token-alice-csv-owner"}
+    mallory_headers = {"Authorization": "Bearer demo-token-mallory-csv-attacker"}
+
+    # Upload and train
+    csv_bytes = open(SAMPLE_DATA_PATH, "rb").read()
+    files = {"file": ("export_test.csv", csv_bytes, "text/csv")}
+    res_up = client.post("/api/dataset/upload", files=files, headers=alice_headers)
+    assert res_up.status_code == 200
+    file_id = res_up.json()["file_id"]
+
+    train_payload = {
+        "file_id": file_id,
+        "dataset_name": "Export Test",
+        "timestamp_col": "timestamp",
+        "building_col": "building_id",
+        "target_col": "energy_kwh",
+        "feature_cols": ["air_temperature", "relative_humidity", "occupancy_rate", "solar_radiation"],
+        "train_split": 0.70,
+        "val_split": 0.15,
+        "test_split": 0.15
+    }
+    res_train = client.post("/api/model/train", json=train_payload, headers=alice_headers)
+    assert res_train.status_code == 200
+    analysis_id = res_train.json()["analysis_id"]
+
+    # Detect anomalies
+    res_detect = client.post("/api/anomalies/detect", json={"analysis_id": analysis_id}, headers=alice_headers)
+    assert res_detect.status_code == 200
+
+    # 1. Mallory cannot export Alice's results
+    res_mal = client.get(f"/api/results/export?analysis_id={analysis_id}", headers=mallory_headers)
+    assert res_mal.status_code == 404
+
+    # 2. Alice can export using Authorization header
+    res_alice_header = client.get(f"/api/results/export?analysis_id={analysis_id}", headers=alice_headers)
+    assert res_alice_header.status_code == 200
+    assert "text/csv" in res_alice_header.headers["content-type"]
+    for col in ["building_id", "timestamp", "actual_energy", "predicted_energy", "residual", "threshold", "severity"]:
+        assert col in res_alice_header.text
+
+    # 3. Alice can export using token query parameter (browser direct link)
+    res_alice_query = client.get(f"/api/results/export?analysis_id={analysis_id}&token=demo-token-alice-csv-owner")
+    assert res_alice_query.status_code == 200
+    assert "text/csv" in res_alice_query.headers["content-type"]
+    lines = res_alice_query.text.strip().split("\n")
+    assert len(lines) > 1  # Header + rows
+

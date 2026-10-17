@@ -128,8 +128,8 @@ def train_lightgbm_pipeline(
     time_features = ["hour", "day_of_week", "is_weekend", "hour_sin", "hour_cos"]
     ml_features = list(feature_cols) + time_features
     
-    # Add building categorical if not numeric
-    building_dummies = pd.get_dummies(df_features[building_col], prefix="bldg", drop_first=True)
+    # Add building categorical if not numeric (explicit float one-hot encoding for all buildings)
+    building_dummies = pd.get_dummies(df_features[building_col], prefix="bldg", drop_first=False, dtype=float)
     X_full = pd.concat([df_features[ml_features], building_dummies], axis=1)
     
     # Impute missing values with training median only (prevent leakage)
@@ -154,23 +154,35 @@ def train_lightgbm_pipeline(
     
     test_meta_df = df_features.iloc[val_end:].copy().reset_index(drop=True)
 
-    # 5. Train LightGBM model
+    # 5. Train LightGBM model with adaptive child and bin constraints to ensure effective splits
+    min_child = max(2, min(20, len(X_train) // 10))
+    min_bin = max(2, min(5, len(X_train) // 20))
+    
     model = lgb.LGBMRegressor(
         n_estimators=180,
         learning_rate=0.04,
         max_depth=6,
         num_leaves=31,
+        min_child_samples=min_child,
+        min_data_in_bin=min_bin,
         subsample=0.85,
         colsample_bytree=0.85,
         random_state=42,
-        importance_type='gain'
+        importance_type='gain',
+        verbose=-1
     )
     
-    model.fit(
-        X_train, y_train,
-        eval_set=[(X_val, y_val)],
-        callbacks=[lgb.early_stopping(stopping_rounds=20, verbose=False)]
-    )
+    callbacks = []
+    if len(X_val) >= 10:
+        stop_rounds = max(5, min(20, len(X_val) // 2))
+        callbacks.append(lgb.early_stopping(stopping_rounds=stop_rounds, verbose=False))
+        model.fit(
+            X_train, y_train,
+            eval_set=[(X_val, y_val)],
+            callbacks=callbacks
+        )
+    else:
+        model.fit(X_train, y_train)
 
     # 6. Evaluate predictions
     y_train_pred = model.predict(X_train)
@@ -187,10 +199,14 @@ def train_lightgbm_pipeline(
     baseline_mae = float(mean_absolute_error(y_test, y_test_persist))
     baseline_rmse = float(np.sqrt(mean_squared_error(y_test, y_test_persist)))
 
-    # Feature importances
+    # Feature importances (LightGBM gain)
     feature_names = list(X_full.columns)
     importances = model.feature_importances_
-    norm_importances = importances / (importances.sum() + 1e-9)
+    total_gain = float(np.sum(importances))
+    if total_gain > 0:
+        norm_importances = importances / total_gain
+    else:
+        norm_importances = np.zeros_like(importances, dtype=float)
     
     feat_imp_list = [
         {"feature": name, "importance": round(float(imp), 4)}

@@ -2,7 +2,7 @@ import io
 import csv
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Query, Response, Header
 from app.schemas.analysis_schemas import (
     HealthResponse, StatusResponse, DatasetUploadResponse, DatasetDeleteResponse,
     TrainRequest, TrainResponse, PredictRequest, PredictResponse,
@@ -318,11 +318,15 @@ async def get_single_analysis(
 @router.get("/results/export")
 async def export_results_csv(
     analysis_id: str = Query(...),
-    user: dict = Depends(get_current_user)
+    token: Optional[str] = Query(None),
+    authorization: Optional[str] = Header(None)
 ):
     """
     Exports full prediction and anomaly detection results as downloadable CSV.
+    Supports either Authorization Bearer header or token query parameter for browser downloads.
     """
+    effective_auth = authorization or (f"Bearer {token}" if token else None)
+    user = await get_current_user(effective_auth)
     try:
         state = verify_analysis_ownership(analysis_id, user_id=user["uid"])
     except (ValueError, PermissionError):

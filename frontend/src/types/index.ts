@@ -116,6 +116,8 @@ export interface IndividualExplanation {
   base_value: number;
   contributions: SHAPContribution[];
   text_summary: string;
+  all_contributions_sum?: number;
+  additivity_residual?: number;
 }
 
 export interface SHAPExplainResponse {

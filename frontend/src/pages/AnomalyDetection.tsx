@@ -80,8 +80,26 @@ export const AnomalyDetection: React.FC = () => {
 
   const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
+  const formatRegimeLabel = (name: string): string => {
+    if (!name) return '';
+    return name
+      .replace(/Occupied_Peak_/g, 'Occupied: ')
+      .replace(/Unoccupied_Night_/g, 'Night: ')
+      .replace(/Weekend_/g, 'Weekend: ')
+      .replace(/_/g, ' ');
+  };
+
+  const regimeTotal = activeAnomaly
+    ? Object.values(activeAnomaly.regime_distribution).reduce((a, b) => a + b, 0)
+    : 0;
+
   const regimeChartData = activeAnomaly
-    ? Object.entries(activeAnomaly.regime_distribution).map(([name, value]) => ({ name, value }))
+    ? Object.entries(activeAnomaly.regime_distribution).map(([name, value]) => ({
+        name,
+        formattedName: formatRegimeLabel(name),
+        value,
+        pct: regimeTotal > 0 ? Number(((value / regimeTotal) * 100).toFixed(1)) : 0
+      })).sort((a, b) => b.value - a.value)
     : [];
 
   return (
@@ -323,7 +341,7 @@ export const AnomalyDetection: React.FC = () => {
                     <Pie
                       data={regimeChartData}
                       dataKey="value"
-                      nameKey="name"
+                      nameKey="formattedName"
                       cx="50%"
                       cy="45%"
                       outerRadius={65}
@@ -334,8 +352,17 @@ export const AnomalyDetection: React.FC = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={tooltipStyle} />
-                    <Legend wrapperStyle={legendStyle} />
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      formatter={(value: any, name: any, item: any) => [
+                        `${value} intervals (${item?.payload?.pct ?? 0}%)`,
+                        name
+                      ]}
+                    />
+                    <Legend
+                      wrapperStyle={legendStyle}
+                      formatter={(value: any, entry: any) => `${value} (${entry?.payload?.pct ?? 0}%)`}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

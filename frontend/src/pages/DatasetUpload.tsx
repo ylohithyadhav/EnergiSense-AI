@@ -104,40 +104,92 @@ export const DatasetUpload: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const sampleCsv = await fetch('/data/sample_energy_data.csv').then(res => {
-        if (!res.ok) throw new Error("Sample file not directly found in public directory.");
-        return res.blob();
-      });
+      let sampleCsv: Blob | null = null;
+      for (const url of ['/data/sample_energy_data.csv', './data/sample_energy_data.csv', 'data/sample_energy_data.csv']) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            sampleCsv = await res.blob();
+            break;
+          }
+        } catch {
+          // Probe next static path
+        }
+      }
 
-      const demoFile = new File([sampleCsv], "sample_energy_data.csv", { type: "text/csv" });
-      setFile(demoFile);
-      await handleUpload(demoFile);
-    } catch (e: any) {
-      // Inline demo data fallback
+      if (sampleCsv && sampleCsv.size > 1000) {
+        const demoFile = new File([sampleCsv], "sample_energy_data.csv", { type: "text/csv" });
+        setFile(demoFile);
+        await handleUpload(demoFile);
+        return;
+      }
+
+      throw new Error("Static CSV not reachable; loading embedded multi-building telemetry.");
+    } catch {
+      // Robust multi-building demo fallback representing all 5 facilities with diurnal profiles
       const sampleData = 
-`timestamp,building_id,energy_kwh,air_temperature,relative_humidity,solar_radiation,occupancy_rate,is_weekend,ground_truth_anomaly
-2024-01-01 00:00:00,Building_Admin_101,50.47,13.75,74.98,0.0,0.034,0,0
-2024-01-01 01:00:00,Building_Admin_101,55.74,12.08,81.33,0.0,0.049,0,0
-2024-01-01 02:00:00,Building_Admin_101,50.42,11.39,75.42,0.0,0.022,0,0
-2024-01-01 03:00:00,Building_Admin_101,51.23,13.50,73.55,0.0,0.025,0,0
-2024-01-01 04:00:00,Building_Admin_101,53.37,12.40,77.19,0.0,0.034,0,0
-2024-01-01 05:00:00,Building_Admin_101,52.33,13.81,71.68,0.0,0.037,0,0
-2024-01-01 06:00:00,Building_Admin_101,53.58,14.86,70.51,32.9,0.147,0,0
-2024-01-01 07:00:00,Building_Admin_101,53.85,21.35,71.69,236.59,0.113,0,0
-2024-01-01 08:00:00,Building_Admin_101,68.74,18.88,60.25,381.57,0.353,0,0
-2024-01-01 09:00:00,Building_Admin_101,80.98,20.04,62.87,550.28,0.530,0,0
-2024-01-01 10:00:00,Building_Admin_101,95.70,25.16,61.26,659.25,0.667,0,0
-2024-01-01 11:00:00,Building_Admin_101,110.78,26.91,55.08,765.31,0.885,0,0
-2024-01-01 12:00:00,Building_Admin_101,115.65,28.02,55.50,814.47,0.886,0,0
-2024-01-01 13:00:00,Building_Admin_101,121.25,29.66,63.53,735.93,0.954,0,0
-2024-01-01 14:00:00,Building_Admin_101,118.42,28.74,60.12,680.12,0.840,0,0
-2024-01-01 15:00:00,Building_Admin_101,114.10,27.15,62.40,540.00,0.780,0,0
-2024-01-01 16:00:00,Building_Admin_101,105.30,24.80,66.10,320.50,0.650,0,0
-2024-01-01 17:00:00,Building_Admin_101,92.50,22.10,69.50,110.20,0.420,0,0
-2024-01-01 18:00:00,Building_Admin_101,78.20,20.30,72.40,10.00,0.210,0,0
-2024-01-01 19:00:00,Building_Admin_101,65.40,19.20,74.80,0.0,0.110,0,0
-2024-01-01 20:00:00,Building_Admin_101,58.30,18.10,75.90,0.0,0.060,0,0
-2024-01-02 01:00:00,Building_Admin_101,88.40,14.60,80.50,0.0,0.020,0,1`;
+`timestamp,building_id,energy_kwh,air_temperature,relative_humidity,wind_speed,solar_radiation,occupancy_rate,is_weekend,ground_truth_anomaly
+2024-01-01 00:00:00,Building_Admin_101,50.47,13.75,74.98,4.87,0.0,0.034,0,0
+2024-01-01 01:00:00,Building_Admin_101,55.74,12.08,81.33,0.61,0.0,0.049,0,0
+2024-01-01 02:00:00,Building_Admin_101,50.42,11.39,75.42,1.91,0.0,0.022,0,0
+2024-01-01 03:00:00,Building_Admin_101,51.23,13.5,73.55,2.49,0.0,0.025,0,0
+2024-01-01 04:00:00,Building_Admin_101,53.37,12.4,77.19,3.61,0.0,0.034,0,0
+2024-01-01 05:00:00,Building_Admin_101,52.33,13.81,71.68,1.36,0.0,0.037,0,0
+2024-01-01 06:00:00,Building_Admin_101,53.58,14.86,70.51,3.51,32.9,0.147,0,0
+2024-01-01 07:00:00,Building_Admin_101,53.85,21.35,71.69,1.92,236.59,0.113,0,0
+2024-01-01 08:00:00,Building_Admin_101,68.74,18.88,60.25,2.39,381.57,0.353,0,0
+2024-01-01 09:00:00,Building_Admin_101,80.98,20.04,62.87,1.18,550.28,0.53,0,0
+2024-01-01 10:00:00,Building_Admin_101,95.7,25.16,61.26,1.18,659.25,0.667,0,0
+2024-01-01 11:00:00,Building_Admin_101,110.78,26.91,55.08,2.59,765.31,0.885,0,0
+2024-01-01 00:00:00,Building_Classroom_404,31.86,12.76,75.63,6.95,0.0,0.031,0,0
+2024-01-01 01:00:00,Building_Classroom_404,32.15,11.94,76.05,4.47,0.0,0.029,0,0
+2024-01-01 02:00:00,Building_Classroom_404,34.83,11.69,75.53,1.38,0.0,0.042,0,0
+2024-01-01 03:00:00,Building_Classroom_404,32.5,11.12,78.49,3.32,0.0,0.026,0,0
+2024-01-01 04:00:00,Building_Classroom_404,35.41,10.84,75.14,3.84,0.0,0.037,0,0
+2024-01-01 05:00:00,Building_Classroom_404,29.42,13.88,76.72,6.21,0.0,0.013,0,0
+2024-01-01 06:00:00,Building_Classroom_404,40.7,18.16,65.94,1.69,30.96,0.236,0,0
+2024-01-01 07:00:00,Building_Classroom_404,37.33,18.63,71.04,6.36,212.41,0.185,0,0
+2024-01-01 08:00:00,Building_Classroom_404,43.52,20.11,63.37,4.11,375.55,0.258,0,0
+2024-01-01 09:00:00,Building_Classroom_404,62.39,24.77,60.7,2.36,601.96,0.454,0,0
+2024-01-01 10:00:00,Building_Classroom_404,84.59,24.77,61.59,8.48,667.18,0.765,0,0
+2024-01-01 11:00:00,Building_Classroom_404,89.69,26.69,58.88,7.45,791.12,0.827,0,0
+2024-01-01 00:00:00,Building_DataCenter_505,161.99,12.9,73.46,4.63,0.0,0.048,0,0
+2024-01-01 01:00:00,Building_DataCenter_505,161.66,12.99,72.95,4.63,0.0,0.013,0,0
+2024-01-01 02:00:00,Building_DataCenter_505,169.46,10.61,80.28,0.96,0.0,0.043,0,0
+2024-01-01 03:00:00,Building_DataCenter_505,163.38,12.15,74.43,5.18,0.0,0.023,0,0
+2024-01-01 04:00:00,Building_DataCenter_505,161.97,13.12,71.47,4.58,0.0,0.036,0,0
+2024-01-01 05:00:00,Building_DataCenter_505,152.77,14.63,73.38,6.23,0.0,0.013,0,0
+2024-01-01 06:00:00,Building_DataCenter_505,157.28,14.46,73.25,1.95,89.62,0.137,0,0
+2024-01-01 07:00:00,Building_DataCenter_505,155.84,19.06,63.5,7.24,250.53,0.155,0,0
+2024-01-01 08:00:00,Building_DataCenter_505,157.41,19.67,59.85,5.44,447.5,0.293,0,0
+2024-01-01 09:00:00,Building_DataCenter_505,163.8,21.79,58.99,6.95,543.06,0.532,0,0
+2024-01-01 10:00:00,Building_DataCenter_505,176.01,24.08,60.43,2.19,669.36,0.65,0,0
+2024-01-01 11:00:00,Building_DataCenter_505,186.65,25.08,60.66,2.89,820.26,0.833,0,0
+2024-01-01 00:00:00,Building_Lab_202,96.25,13.22,77.7,2.32,0.0,0.012,0,0
+2024-01-01 01:00:00,Building_Lab_202,96.22,12.79,77.52,3.87,0.0,0.034,0,0
+2024-01-01 02:00:00,Building_Lab_202,96.87,13.84,72.51,7.94,0.0,0.039,0,0
+2024-01-01 03:00:00,Building_Lab_202,98.17,12.51,78.3,4.19,0.0,0.034,0,0
+2024-01-01 04:00:00,Building_Lab_202,102.68,10.69,76.46,3.63,0.0,0.018,0,0
+2024-01-01 05:00:00,Building_Lab_202,92.17,15.04,73.1,4.4,0.0,0.028,0,0
+2024-01-01 06:00:00,Building_Lab_202,98.47,16.62,65.89,2.77,0.0,0.211,0,0
+2024-01-01 07:00:00,Building_Lab_202,100.18,17.98,66.47,2.72,272.79,0.173,0,0
+2024-01-01 08:00:00,Building_Lab_202,105.79,22.95,66.13,2.2,291.82,0.269,0,0
+2024-01-01 09:00:00,Building_Lab_202,117.1,22.92,61.96,5.13,509.46,0.507,0,0
+2024-01-01 10:00:00,Building_Lab_202,137.58,25.5,58.36,2.34,672.11,0.678,0,0
+2024-01-01 11:00:00,Building_Lab_202,135.4,24.03,50.96,2.61,804.08,0.812,0,0
+2024-01-01 00:00:00,Building_Library_303,34.58,12.7,73.89,3.83,0.0,0.041,0,0
+2024-01-01 01:00:00,Building_Library_303,35.48,13.07,79.32,3.08,0.0,0.031,0,0
+2024-01-01 02:00:00,Building_Library_303,31.91,13.88,76.15,3.67,0.0,0.023,0,0
+2024-01-01 03:00:00,Building_Library_303,37.51,12.89,80.54,5.01,0.0,0.03,0,0
+2024-01-01 04:00:00,Building_Library_303,37.08,11.46,78.33,8.56,0.0,0.021,0,0
+2024-01-01 05:00:00,Building_Library_303,39.16,12.76,77.54,4.38,0.0,0.03,0,0
+2024-01-01 06:00:00,Building_Library_303,35.9,16.2,69.86,4.76,59.67,0.134,0,0
+2024-01-01 07:00:00,Building_Library_303,39.74,17.34,66.72,2.89,218.86,0.157,0,0
+2024-01-01 08:00:00,Building_Library_303,49.58,22.0,66.93,2.23,407.34,0.302,0,0
+2024-01-01 09:00:00,Building_Library_303,55.01,20.94,59.71,3.59,531.82,0.454,0,0
+2024-01-01 10:00:00,Building_Library_303,72.09,24.0,64.67,1.33,660.88,0.693,0,0
+2024-01-01 11:00:00,Building_Library_303,83.75,25.39,55.43,5.57,780.16,0.886,0,0`;
+
       const blob = new Blob([sampleData], { type: 'text/csv' });
       const fallbackFile = new File([blob], 'sample_energy_data.csv', { type: 'text/csv' });
       setFile(fallbackFile);

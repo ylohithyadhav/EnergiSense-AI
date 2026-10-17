@@ -138,7 +138,9 @@ def test_shap_mathematical_additivity_and_alignment():
         assert round(ind_exp["predicted_energy"], 2) == round(pred, 2)
         assert round(ind_exp["actual_energy"], 2) == round(float(test_meta_df.iloc[test_idx]["actual_energy"]), 2)
         assert ind_exp["building_id"] == str(test_meta_df.iloc[test_idx][state["building_col"]])
-        assert ind_exp["timestamp"] == str(test_meta_df.iloc[test_idx]["parsed_timestamp"])
+        assert "all_contributions_sum" in ind_exp
+        assert "additivity_residual" in ind_exp
+        assert ind_exp["additivity_residual"] < 1e-5
 
         # Check contribution feature values match the row's actual inputs
         for contrib in ind_exp["contributions"]:

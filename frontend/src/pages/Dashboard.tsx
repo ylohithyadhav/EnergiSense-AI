@@ -31,6 +31,16 @@ import {
   ArrowRight,
   Sparkles
 } from 'lucide-react';
+import { formatFeatureLabel } from './ExplainableAI';
+
+export const formatRegimeLabel = (name: string): string => {
+  if (!name) return '';
+  return name
+    .replace(/Occupied_Peak_/g, 'Occupied: ')
+    .replace(/Unoccupied_Night_/g, 'Night: ')
+    .replace(/Weekend_/g, 'Weekend: ')
+    .replace(/_/g, ' ');
+};
 
 export const Dashboard: React.FC = () => {
   const { activeUpload, activeTrain, activeAnomaly } = useAnalysis();
@@ -125,14 +135,21 @@ export const Dashboard: React.FC = () => {
     }));
   }, [activeAnomaly]);
 
-  // Chart 5: Operating Regime breakdown
+  // Chart 5: Operating Regime breakdown with total calculation
+  const regimeTotal = useMemo(() => {
+    if (!activeAnomaly) return 0;
+    return Object.values(activeAnomaly.regime_distribution).reduce((a, b) => a + b, 0);
+  }, [activeAnomaly]);
+
   const regimeData = useMemo(() => {
     if (!activeAnomaly) return [];
     return Object.entries(activeAnomaly.regime_distribution).map(([name, value]) => ({
       name,
-      value
-    }));
-  }, [activeAnomaly]);
+      formattedName: formatRegimeLabel(name),
+      value,
+      pct: regimeTotal > 0 ? Number(((value / regimeTotal) * 100).toFixed(1)) : 0
+    })).sort((a, b) => b.value - a.value);
+  }, [activeAnomaly, regimeTotal]);
 
   // Chart 6: Detection method comparison
   const methodComparisonData = useMemo(() => {
@@ -142,6 +159,16 @@ export const Dashboard: React.FC = () => {
       count: m.anomalies_detected
     }));
   }, [activeAnomaly]);
+
+  // Chart 7: LightGBM Feature Importance data
+  const featureImpData = useMemo(() => {
+    if (!activeTrain?.feature_importances) return [];
+    return activeTrain.feature_importances.slice(0, 8).map(item => ({
+      ...item,
+      percentage: Number(((Number(item.importance) || 0) * 100).toFixed(1)),
+      formattedFeature: formatFeatureLabel(item.feature)
+    }));
+  }, [activeTrain]);
 
   const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
@@ -395,19 +422,28 @@ export const Dashboard: React.FC = () => {
                       <Pie
                         data={regimeData}
                         dataKey="value"
-                        nameKey="name"
+                        nameKey="formattedName"
                         cx="50%"
                         cy="45%"
                         outerRadius={65}
-                        label={({ name, percent }) => `${name.split('_')[0]} (${(percent * 100).toFixed(0)}%)`}
+                        label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                         labelLine={false}
                       >
                         {regimeData.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={tooltipStyle} />
-                      <Legend wrapperStyle={{ ...legendStyle, paddingTop: '8px' }} />
+                      <Tooltip
+                        contentStyle={tooltipStyle}
+                        formatter={(value: any, name: any, item: any) => [
+                          `${value} intervals (${item?.payload?.pct ?? 0}%)`,
+                          name
+                        ]}
+                      />
+                      <Legend
+                        wrapperStyle={{ ...legendStyle, paddingTop: '8px' }}
+                        formatter={(value: any, entry: any) => `${value} (${entry?.payload?.pct ?? 0}%)`}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -453,15 +489,49 @@ export const Dashboard: React.FC = () => {
                 Most influential predictors driving smart building load forecasting.
               </p>
               <div className="h-64 w-full min-w-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={activeTrain.feature_importances.slice(0, 8)} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                    <XAxis type="number" tick={{ fontSize: 10, fill: axisTickColor }} />
-                    <YAxis dataKey="feature" type="category" width={85} tick={{ fontSize: 9, fill: axisTickColor }} />
-                    <Tooltip contentStyle={tooltipStyle} />
-                    <Bar dataKey="importance" name="Relative Gain" fill="#2563eb" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                {featureImpData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={featureImpData}
+                      layout="vertical"
+                      margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                      <XAxis
+                        type="number"
+                        unit="%"
+                        domain={[0, 'dataMax + 5']}
+                        tick={{ fontSize: 10, fill: axisTickColor }}
+                      />
+                      <YAxis
+                        dataKey="feature"
+                        type="category"
+                        width={130}
+                        tick={{ fontSize: 9, fill: axisTickColor }}
+                        tickFormatter={formatFeatureLabel}
+                      />
+                      <Tooltip
+                        contentStyle={tooltipStyle}
+                        formatter={(val: any, name: any, item: any) => [
+                          `${item?.payload?.percentage}% (Normalized Gain: ${item?.payload?.importance})`,
+                          item?.payload?.formattedFeature || 'Feature'
+                        ]}
+                      />
+                      <Bar
+                        dataKey="percentage"
+                        name="Relative Gain"
+                        fill="#2563eb"
+                        radius={[0, 4, 4, 0]}
+                        barSize={16}
+                        minPointSize={3}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-slate-400">
+                    Feature importances will display once model is trained.
+                  </div>
+                )}
               </div>
             </div>
 

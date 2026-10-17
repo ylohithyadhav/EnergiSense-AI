@@ -49,10 +49,81 @@ export const AnomalyDetails: React.FC = () => {
     return filteredRecords.slice(start, start + pageSize);
   }, [filteredRecords, currentPage]);
 
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
+
+  // Helper to escape CSV cell according to RFC 4180
+  const escapeCsvCell = (val: any): string => {
+    if (val === null || val === undefined) return '';
+    const str = String(val);
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
   const handleExport = () => {
     if (!activeAnomaly) return;
-    const url = api.getExportUrl(activeAnomaly.analysis_id);
-    window.open(url, '_blank');
+
+    const recordsToExport = filteredRecords;
+    if (recordsToExport.length === 0) {
+      setExportNotice("No anomaly records match the active search and filter criteria to export.");
+      setTimeout(() => setExportNotice(null), 4000);
+      return;
+    }
+
+    try {
+      const headers = [
+        "Building ID",
+        "Timestamp",
+        "Actual Energy (kWh)",
+        "Predicted Energy (kWh)",
+        "Residual (kWh)",
+        "Threshold (kWh)",
+        "Severity",
+        "Operating Regime",
+        "Suggested Action"
+      ];
+
+      const csvRows: string[] = [];
+      csvRows.push(headers.map(escapeCsvCell).join(','));
+
+      for (const rec of recordsToExport) {
+        const row = [
+          rec.building_id,
+          rec.timestamp,
+          rec.actual_energy.toFixed(2),
+          rec.predicted_energy.toFixed(2),
+          rec.residual.toFixed(2),
+          rec.threshold.toFixed(2),
+          rec.severity,
+          rec.regime,
+          rec.suggested_action
+        ];
+        csvRows.push(row.map(escapeCsvCell).join(','));
+      }
+
+      const csvContent = csvRows.join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const nowStr = new Date().toISOString().replace(/[:.]/g, '-');
+      const bldgSuffix = buildingFilter !== 'All' ? `_${buildingFilter}` : '';
+      const sevSuffix = severityFilter !== 'All' ? `_${severityFilter}` : '';
+      const filename = `energisense_anomalies${bldgSuffix}${sevSuffix}_${nowStr}.csv`;
+
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+
+      setExportNotice(`Exported ${recordsToExport.length} anomaly records to ${filename}`);
+      setTimeout(() => setExportNotice(null), 5000);
+    } catch (err: any) {
+      setExportNotice(`Failed to export CSV: ${err.message || 'Unknown error'}`);
+      setTimeout(() => setExportNotice(null), 5000);
+    }
   };
 
   const handleExplainWithSHAP = (recordIndex: number) => {
@@ -79,6 +150,14 @@ export const AnomalyDetails: React.FC = () => {
           </button>
         )}
       </div>
+
+      {/* Export Notification / Error Banner */}
+      {exportNotice && (
+        <div className="flex items-center gap-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 p-3.5 text-xs text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-900/50">
+          <Download className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+          <span className="font-medium">{exportNotice}</span>
+        </div>
+      )}
 
       {!activeAnomaly && (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 text-center shadow-sm">
@@ -170,47 +249,63 @@ export const AnomalyDetails: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-                  {paginatedRecords.map((row) => {
-                    const isCrit = row.severity === 'Critical';
-                    const isWarn = row.severity === 'Warning';
-                    return (
-                      <tr key={row.index} className={isCrit ? 'bg-rose-50/30 dark:bg-rose-950/20' : isWarn ? 'bg-amber-50/20 dark:bg-amber-950/20' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/40'}>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            isCrit
-                              ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
+                  {paginatedRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="py-8 px-4 text-center text-xs text-slate-500 dark:text-slate-400 font-sans">
+                        No anomaly records match the active filter criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedRecords.map((row) => {
+                      const isCrit = row.severity === 'Critical';
+                      const isWarn = row.severity === 'Warning';
+                      return (
+                        <tr key={row.index} className={isCrit ? 'bg-rose-50/30 dark:bg-rose-950/20' : isWarn ? 'bg-amber-50/20 dark:bg-amber-950/20' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/40'}>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              isCrit
+                                ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
+                                : isWarn
+                                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                                : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
+                            }`}>
+                              {row.severity}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-sans font-semibold text-navy-900 dark:text-white">{row.building_id}</td>
+                          <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{row.timestamp}</td>
+                          <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{row.actual_energy.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-blue-700 dark:text-blue-400">{row.predicted_energy.toFixed(2)}</td>
+                          <td className={`py-3 px-4 font-semibold ${
+                            row.residual > 0
+                              ? 'text-rose-600 dark:text-rose-400'
+                              : isCrit
+                              ? 'text-rose-600 dark:text-rose-400'
                               : isWarn
-                              ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
-                              : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-slate-600 dark:text-slate-400'
                           }`}>
-                            {row.severity}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 font-sans font-semibold text-navy-900 dark:text-white">{row.building_id}</td>
-                        <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{row.timestamp}</td>
-                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{row.actual_energy.toFixed(2)}</td>
-                        <td className="py-3 px-4 text-blue-700 dark:text-blue-400">{row.predicted_energy.toFixed(2)}</td>
-                        <td className={`py-3 px-4 font-semibold ${row.residual > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600 dark:text-slate-400'}`}>
-                          {row.residual > 0 ? `+${row.residual.toFixed(2)}` : row.residual.toFixed(2)}
-                        </td>
-                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400">{row.threshold.toFixed(2)}</td>
-                        <td className="py-3 px-4 font-sans text-slate-600 dark:text-slate-300">{row.regime}</td>
-                        <td className="py-3 px-4 font-sans text-slate-600 dark:text-slate-400 max-w-xs truncate" title={row.suggested_action}>
-                          {row.suggested_action}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <button
-                            onClick={() => handleExplainWithSHAP(row.index)}
-                            title="Generate SHAP Explanation for this row"
-                            className="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-800 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition"
-                          >
-                            <Cpu className="h-3 w-3" />
-                            <span>SHAP</span>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                            {row.residual > 0 ? `+${row.residual.toFixed(2)}` : row.residual.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-slate-500 dark:text-slate-400">±{row.threshold.toFixed(2)}</td>
+                          <td className="py-3 px-4 font-sans text-slate-600 dark:text-slate-300">{row.regime}</td>
+                          <td className="py-3 px-4 font-sans text-slate-600 dark:text-slate-400 max-w-xs truncate" title={row.suggested_action}>
+                            {row.suggested_action}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <button
+                              onClick={() => handleExplainWithSHAP(row.index)}
+                              title="Generate SHAP Explanation for this row"
+                              className="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-800 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition"
+                            >
+                              <Cpu className="h-3 w-3" />
+                              <span>SHAP</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
