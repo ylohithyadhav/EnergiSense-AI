@@ -64,15 +64,15 @@ export const AnomalyDetails: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Granular Anomaly Investigation</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900 dark:text-white">Granular Anomaly Investigation</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Per-interval residual analysis, severity scores, and facility triage guidance.
           </p>
         </div>
         {activeAnomaly && (
           <button
             onClick={handleExport}
-            className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-navy-800 transition w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 dark:bg-blue-600 hover:bg-navy-800 dark:hover:bg-blue-700 px-4 py-2 text-xs font-semibold text-white shadow transition w-full sm:w-auto"
           >
             <Download className="h-4 w-4" />
             <span>Export Anomaly Report (CSV)</span>
@@ -81,8 +81,8 @@ export const AnomalyDetails: React.FC = () => {
       </div>
 
       {!activeAnomaly && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 text-center shadow-sm">
-          <p className="text-sm text-slate-600 font-medium">No anomaly detection results active.</p>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 text-center shadow-sm">
+          <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">No anomaly detection results active.</p>
           <button
             onClick={() => navigate('/anomalies')}
             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition w-full sm:w-auto"
@@ -95,9 +95,9 @@ export const AnomalyDetails: React.FC = () => {
       {activeAnomaly && (
         <div className="space-y-4">
           {/* Filter Bar */}
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
             <div className="relative w-full md:w-72">
-              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
               <input
                 type="text"
                 placeholder="Search timestamp, building, regime..."
@@ -106,20 +106,20 @@ export const AnomalyDetails: React.FC = () => {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-xs focus:border-blue-600 focus:outline-none"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 pl-9 pr-3 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-600 focus:outline-none"
               />
             </div>
 
             <div className="flex flex-wrap items-center justify-between sm:justify-start gap-3 w-full md:w-auto">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-600">Severity:</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Severity:</span>
                 <select
                   value={severityFilter}
                   onChange={(e) => {
                     setSeverityFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="rounded-lg border border-slate-300 p-1.5 text-xs focus:border-blue-600 focus:outline-none bg-white"
+                  className="rounded-lg border border-slate-300 dark:border-slate-700 p-1.5 text-xs focus:border-blue-600 focus:outline-none bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                 >
                   <option value="All">All Severities</option>
                   <option value="Critical">Critical</option>
@@ -129,14 +129,14 @@ export const AnomalyDetails: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-600">Building:</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Building:</span>
                 <select
                   value={buildingFilter}
                   onChange={(e) => {
                     setBuildingFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="rounded-lg border border-slate-300 p-1.5 text-xs focus:border-blue-600 focus:outline-none bg-white"
+                  className="rounded-lg border border-slate-300 dark:border-slate-700 p-1.5 text-xs focus:border-blue-600 focus:outline-none bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                 >
                   <option value="All">All Buildings</option>
                   {buildings.map((b) => (
@@ -145,17 +145,17 @@ export const AnomalyDetails: React.FC = () => {
                 </select>
               </div>
 
-              <span className="text-xs text-slate-500 font-medium">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 {filteredRecords.length} records matching
               </span>
             </div>
           </div>
 
           {/* Anomaly Records Table */}
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden min-w-0">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden min-w-0">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-600 uppercase border-b border-slate-200 font-semibold">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 uppercase border-b border-slate-200 dark:border-slate-800 font-semibold">
                   <tr>
                     <th className="py-3 px-4">Severity</th>
                     <th className="py-3 px-4">Building</th>
@@ -169,40 +169,40 @@ export const AnomalyDetails: React.FC = () => {
                     <th className="py-3 px-4 text-center">Explain</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-mono">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
                   {paginatedRecords.map((row) => {
                     const isCrit = row.severity === 'Critical';
                     const isWarn = row.severity === 'Warning';
                     return (
-                      <tr key={row.index} className={isCrit ? 'bg-rose-50/30' : isWarn ? 'bg-amber-50/20' : 'hover:bg-slate-50/50'}>
+                      <tr key={row.index} className={isCrit ? 'bg-rose-50/30 dark:bg-rose-950/20' : isWarn ? 'bg-amber-50/20 dark:bg-amber-950/20' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/40'}>
                         <td className="py-3 px-4">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                             isCrit
-                              ? 'bg-rose-100 text-rose-800'
+                              ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
                               : isWarn
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-emerald-100 text-emerald-800'
+                              ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                              : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
                           }`}>
                             {row.severity}
                           </span>
                         </td>
-                        <td className="py-3 px-4 font-sans font-semibold text-navy-900">{row.building_id}</td>
-                        <td className="py-3 px-4 text-slate-600">{row.timestamp}</td>
-                        <td className="py-3 px-4 font-bold text-slate-900">{row.actual_energy.toFixed(2)}</td>
-                        <td className="py-3 px-4 text-blue-700">{row.predicted_energy.toFixed(2)}</td>
-                        <td className={`py-3 px-4 font-semibold ${row.residual > 0 ? 'text-rose-600' : 'text-slate-600'}`}>
+                        <td className="py-3 px-4 font-sans font-semibold text-navy-900 dark:text-white">{row.building_id}</td>
+                        <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{row.timestamp}</td>
+                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{row.actual_energy.toFixed(2)}</td>
+                        <td className="py-3 px-4 text-blue-700 dark:text-blue-400">{row.predicted_energy.toFixed(2)}</td>
+                        <td className={`py-3 px-4 font-semibold ${row.residual > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600 dark:text-slate-400'}`}>
                           {row.residual > 0 ? `+${row.residual.toFixed(2)}` : row.residual.toFixed(2)}
                         </td>
-                        <td className="py-3 px-4 text-slate-500">{row.threshold.toFixed(2)}</td>
-                        <td className="py-3 px-4 font-sans text-slate-600">{row.regime}</td>
-                        <td className="py-3 px-4 font-sans text-slate-600 max-w-xs truncate" title={row.suggested_action}>
+                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400">{row.threshold.toFixed(2)}</td>
+                        <td className="py-3 px-4 font-sans text-slate-600 dark:text-slate-300">{row.regime}</td>
+                        <td className="py-3 px-4 font-sans text-slate-600 dark:text-slate-400 max-w-xs truncate" title={row.suggested_action}>
                           {row.suggested_action}
                         </td>
                         <td className="py-3 px-4 text-center">
                           <button
                             onClick={() => handleExplainWithSHAP(row.index)}
                             title="Generate SHAP Explanation for this row"
-                            className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-700 hover:bg-blue-600 hover:text-white transition"
+                            className="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-800 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition"
                           >
                             <Cpu className="h-3 w-3" />
                             <span>SHAP</span>
@@ -216,23 +216,23 @@ export const AnomalyDetails: React.FC = () => {
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200 px-4 sm:px-6 py-3 bg-slate-50">
-              <span className="text-xs text-slate-500">
-                Page <span className="font-semibold text-navy-900">{currentPage}</span> of{' '}
-                <span className="font-semibold text-navy-900">{totalPages}</span>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 bg-slate-50 dark:bg-slate-800/40">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Page <span className="font-semibold text-navy-900 dark:text-white">{currentPage}</span> of{' '}
+                <span className="font-semibold text-navy-900 dark:text-white">{totalPages}</span>
               </span>
               <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
                 <button
                   disabled={currentPage <= 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  className="rounded border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+                  className="rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40"
                 >
                   Previous
                 </button>
                 <button
                   disabled={currentPage >= totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  className="rounded border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+                  className="rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40"
                 >
                   Next
                 </button>

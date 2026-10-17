@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAnalysis } from '../context/AnalysisContext';
+import { useTheme } from '../context/ThemeContext';
 import { KPICard } from '../components/KPICard';
 import {
   LineChart,
@@ -33,7 +34,16 @@ import {
 
 export const Dashboard: React.FC = () => {
   const { activeUpload, activeTrain, activeAnomaly } = useAnalysis();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
+
+  // Theme-aware Recharts styling tokens
+  const gridStroke = isDark ? '#334155' : '#f1f5f9';
+  const axisTickColor = isDark ? '#94a3b8' : '#64748b';
+  const tooltipStyle = isDark
+    ? { backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc', borderRadius: '8px', fontSize: '11px' }
+    : { backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#fff', borderRadius: '8px', fontSize: '11px' };
+  const legendStyle = { fontSize: '12px', color: isDark ? '#94a3b8' : '#64748b' };
 
   // Compute live KPI summaries
   const kpis = useMemo(() => {
@@ -140,8 +150,8 @@ export const Dashboard: React.FC = () => {
       {/* Top Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Smart Building Energy Analytics Dashboard</h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-500">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900 dark:text-white">Smart Building Energy Analytics Dashboard</h1>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Regime-Aware machine learning for load forecasting, anomaly triage, and energy efficiency.
           </p>
         </div>
@@ -218,18 +228,18 @@ export const Dashboard: React.FC = () => {
 
       {/* Guided Empty State */}
       {!activeTrain && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-10 text-center shadow-sm">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-10 text-center shadow-sm">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
             <Zap className="h-7 w-7" />
           </div>
-          <h3 className="mt-4 text-base font-bold text-navy-900">No Active Analysis Running</h3>
-          <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto">
+          <h3 className="mt-4 text-base font-bold text-navy-900 dark:text-white">No Active Analysis Running</h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
             Upload your building energy CSV telemetry or load our pre-configured synthetic demo dataset to view interactive predictions, anomaly distributions, and SHAP explainability charts.
           </p>
           <div className="mt-6 flex justify-center">
             <button
               onClick={() => navigate('/upload')}
-              className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-semibold text-white shadow hover:bg-navy-800 transition w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 dark:bg-blue-600 hover:bg-navy-800 dark:hover:bg-blue-700 px-5 py-2.5 text-xs font-semibold text-white shadow transition w-full sm:w-auto"
             >
               <span>Get Started with Dataset Upload</span>
               <ArrowRight className="h-4 w-4" />
@@ -242,17 +252,17 @@ export const Dashboard: React.FC = () => {
       {activeTrain && (
         <div className="space-y-6">
           {/* Chart 1: Actual vs Predicted Energy */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
               <div>
-                <h2 className="text-base font-bold text-navy-900">1. Actual vs Predicted Energy Consumption</h2>
-                <p className="text-xs text-slate-500">
+                <h2 className="text-base font-bold text-navy-900 dark:text-white">1. Actual vs Predicted Energy Consumption</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Chronological test interval evaluation comparing actual meter readings against LightGBM predictions.
                 </p>
               </div>
               <button
                 onClick={() => navigate('/predict')}
-                className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1 self-start sm:self-auto"
+                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 self-start sm:self-auto"
               >
                 <span>Pipeline Details</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -261,11 +271,11 @@ export const Dashboard: React.FC = () => {
             <div className="h-64 sm:h-72 w-full mt-4 min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={activeTrain.actual_vs_predicted_preview}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} tickFormatter={(ts) => ts.split(' ')[1] || ts} minTickGap={15} />
-                  <YAxis tick={{ fontSize: 10 }} unit=" kWh" />
-                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
-                  <Legend wrapperStyle={{ fontSize: '12px' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis dataKey="timestamp" tick={{ fontSize: 10, fill: axisTickColor }} tickFormatter={(ts) => ts.split(' ')[1] || ts} minTickGap={15} />
+                  <YAxis tick={{ fontSize: 10, fill: axisTickColor }} unit=" kWh" />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={legendStyle} />
                   <Line type="monotone" dataKey="actual_energy" name="Actual Load (kWh)" stroke="#10b981" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="predicted_energy" name="Predicted Load (kWh)" stroke="#2563eb" strokeWidth={2} strokeDasharray="4 4" dot={false} />
                 </LineChart>
@@ -274,9 +284,9 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Chart 2: Energy Consumption Over Time */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
-            <h2 className="text-base font-bold text-navy-900 mb-1">2. Energy Consumption Over Time (Continuous Baseline Load)</h2>
-            <p className="text-xs text-slate-500 mb-4">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm">
+            <h2 className="text-base font-bold text-navy-900 dark:text-white mb-1">2. Energy Consumption Over Time (Continuous Baseline Load)</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               Area trace visualizing the total smart building energy trajectory across time.
             </p>
             <div className="h-48 sm:h-56 w-full min-w-0">
@@ -288,10 +298,10 @@ export const Dashboard: React.FC = () => {
                       <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} tickFormatter={(ts) => ts.split(' ')[1] || ts} minTickGap={15} />
-                  <YAxis tick={{ fontSize: 10 }} unit=" kWh" />
-                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis dataKey="timestamp" tick={{ fontSize: 10, fill: axisTickColor }} tickFormatter={(ts) => ts.split(' ')[1] || ts} minTickGap={15} />
+                  <YAxis tick={{ fontSize: 10, fill: axisTickColor }} unit=" kWh" />
+                  <Tooltip contentStyle={tooltipStyle} />
                   <Area type="monotone" dataKey="actual_energy" name="Telemetry Load (kWh)" stroke="#0891b2" fillOpacity={1} fill="url(#colorEnergy)" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -301,9 +311,9 @@ export const Dashboard: React.FC = () => {
           {/* Charts Row: Chart 3 (Normal vs Anomalous) & Chart 4 (Anomalies by Building) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Chart 3: Normal vs Anomalous Observations */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
-              <h2 className="text-base font-bold text-navy-900 mb-1">3. Normal vs Anomalous Observations</h2>
-              <p className="text-xs text-slate-500 mb-4">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm min-w-0">
+              <h2 className="text-base font-bold text-navy-900 dark:text-white mb-1">3. Normal vs Anomalous Observations</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                 Proportion of normal operations versus flagged abnormal deviations.
               </p>
               <div className="h-64 w-full flex items-center justify-center min-w-0">
@@ -325,8 +335,8 @@ export const Dashboard: React.FC = () => {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
-                      <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                      <Tooltip contentStyle={tooltipStyle} />
+                      <Legend wrapperStyle={{ ...legendStyle, paddingTop: '8px' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -338,26 +348,26 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Chart 4: Anomalies by Building */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-1">
-                <h2 className="text-base font-bold text-navy-900">4. Anomalies Flagged by Building</h2>
+                <h2 className="text-base font-bold text-navy-900 dark:text-white">4. Anomalies Flagged by Building</h2>
                 {activeAnomaly && (
-                  <button onClick={() => navigate('/anomalies/details')} className="text-xs text-blue-600 hover:underline self-start sm:self-auto">
+                  <button onClick={() => navigate('/anomalies/details')} className="text-xs text-blue-600 dark:text-blue-400 hover:underline self-start sm:self-auto">
                     View Details
                   </button>
                 )}
               </div>
-              <p className="text-xs text-slate-500 mb-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                 Facility meters exhibiting the highest frequency of abnormal consumption.
               </p>
               <div className="h-64 w-full min-w-0">
                 {buildingAnomalyData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={buildingAnomalyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis dataKey="building" tick={{ fontSize: 9 }} interval={0} angle={-15} textAnchor="end" height={40} />
-                      <YAxis tick={{ fontSize: 10 }} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                      <XAxis dataKey="building" tick={{ fontSize: 9, fill: axisTickColor }} interval={0} angle={-15} textAnchor="end" height={40} />
+                      <YAxis tick={{ fontSize: 10, fill: axisTickColor }} />
+                      <Tooltip contentStyle={tooltipStyle} />
                       <Bar dataKey="count" name="Anomalous Events" fill="#ef4444" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -373,9 +383,9 @@ export const Dashboard: React.FC = () => {
           {/* Charts Row: Chart 5 (Operating Regime) & Chart 6 (Detection Method Comparison) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Chart 5: Operating Regime Distribution */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
-              <h2 className="text-base font-bold text-navy-900 mb-1">5. Operating Regime Distribution</h2>
-              <p className="text-xs text-slate-500 mb-4">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm min-w-0">
+              <h2 className="text-base font-bold text-navy-900 dark:text-white mb-1">5. Operating Regime Distribution</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                 Proportion of data categorized by occupancy schedule and thermal cooling stress.
               </p>
               <div className="h-64 w-full flex items-center justify-center min-w-0">
@@ -396,8 +406,8 @@ export const Dashboard: React.FC = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
-                      <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                      <Tooltip contentStyle={tooltipStyle} />
+                      <Legend wrapperStyle={{ ...legendStyle, paddingTop: '8px' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -409,19 +419,19 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Chart 6: Detection Method Comparison */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
-              <h2 className="text-base font-bold text-navy-900 mb-1">6. Detection Method Comparison</h2>
-              <p className="text-xs text-slate-500 mb-4">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm min-w-0">
+              <h2 className="text-base font-bold text-navy-900 dark:text-white mb-1">6. Detection Method Comparison</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                 Comparative anomaly discoveries across Global, Rolling, Isolation Forest, and Regime-Aware.
               </p>
               <div className="h-64 w-full min-w-0">
                 {methodComparisonData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={methodComparisonData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis dataKey="method" tick={{ fontSize: 9 }} interval={0} angle={-15} textAnchor="end" height={45} />
-                      <YAxis tick={{ fontSize: 10 }} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                      <XAxis dataKey="method" tick={{ fontSize: 9, fill: axisTickColor }} interval={0} angle={-15} textAnchor="end" height={45} />
+                      <YAxis tick={{ fontSize: 10, fill: axisTickColor }} />
+                      <Tooltip contentStyle={tooltipStyle} />
                       <Bar dataKey="count" name="Flagged Instances" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -437,18 +447,18 @@ export const Dashboard: React.FC = () => {
           {/* Charts Row: Chart 7 (Feature Importance) & Chart 8 (Energy Usage by Hour) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Chart 7: Feature Importance */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
-              <h2 className="text-base font-bold text-navy-900 mb-1">7. Feature Importance (LightGBM Gain)</h2>
-              <p className="text-xs text-slate-500 mb-4">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm min-w-0">
+              <h2 className="text-base font-bold text-navy-900 dark:text-white mb-1">7. Feature Importance (LightGBM Gain)</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                 Most influential predictors driving smart building load forecasting.
               </p>
               <div className="h-64 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activeTrain.feature_importances.slice(0, 8)} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis type="number" tick={{ fontSize: 10 }} />
-                    <YAxis dataKey="feature" type="category" width={85} tick={{ fontSize: 9 }} />
-                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                    <XAxis type="number" tick={{ fontSize: 10, fill: axisTickColor }} />
+                    <YAxis dataKey="feature" type="category" width={85} tick={{ fontSize: 9, fill: axisTickColor }} />
+                    <Tooltip contentStyle={tooltipStyle} />
                     <Bar dataKey="importance" name="Relative Gain" fill="#2563eb" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -456,18 +466,18 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Chart 8: Hourly Energy Usage Profile */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
-              <h2 className="text-base font-bold text-navy-900 mb-1">8. Diurnal Energy Usage Profile</h2>
-              <p className="text-xs text-slate-500 mb-4">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm min-w-0">
+              <h2 className="text-base font-bold text-navy-900 dark:text-white mb-1">8. Diurnal Energy Usage Profile</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                 Average consumption by time of day across the evaluated intervals.
               </p>
               <div className="h-64 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={hourlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="hour" tick={{ fontSize: 10 }} minTickGap={10} />
-                    <YAxis tick={{ fontSize: 10 }} unit=" kWh" />
-                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                    <XAxis dataKey="hour" tick={{ fontSize: 10, fill: axisTickColor }} minTickGap={10} />
+                    <YAxis tick={{ fontSize: 10, fill: axisTickColor }} unit=" kWh" />
+                    <Tooltip contentStyle={tooltipStyle} />
                     <Line type="monotone" dataKey="avgEnergy" name="Average Load (kWh)" stroke="#06b6d4" strokeWidth={2.5} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>

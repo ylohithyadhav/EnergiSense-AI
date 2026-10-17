@@ -18,34 +18,34 @@ export const KPICard: React.FC<KPICardProps> = ({
 }) => {
   const variantStyles = {
     blue: {
-      bg: 'bg-blue-50 border-blue-100',
+      bg: 'bg-blue-50 border-blue-100 dark:bg-slate-900 dark:border-blue-950/60',
       iconBg: 'bg-blue-600 text-white',
-      text: 'text-blue-900',
-      accent: 'text-blue-600'
+      text: 'text-blue-900 dark:text-blue-300',
+      accent: 'text-blue-600 dark:text-blue-400'
     },
     green: {
-      bg: 'bg-emerald-50 border-emerald-100',
+      bg: 'bg-emerald-50 border-emerald-100 dark:bg-slate-900 dark:border-emerald-950/60',
       iconBg: 'bg-emerald-600 text-white',
-      text: 'text-emerald-900',
-      accent: 'text-emerald-600'
+      text: 'text-emerald-900 dark:text-emerald-300',
+      accent: 'text-emerald-600 dark:text-emerald-400'
     },
     amber: {
-      bg: 'bg-amber-50 border-amber-100',
+      bg: 'bg-amber-50 border-amber-100 dark:bg-slate-900 dark:border-amber-950/60',
       iconBg: 'bg-amber-500 text-white',
-      text: 'text-amber-900',
-      accent: 'text-amber-600'
+      text: 'text-amber-900 dark:text-amber-300',
+      accent: 'text-amber-600 dark:text-amber-400'
     },
     red: {
-      bg: 'bg-rose-50 border-rose-100',
+      bg: 'bg-rose-50 border-rose-100 dark:bg-slate-900 dark:border-rose-950/60',
       iconBg: 'bg-rose-600 text-white',
-      text: 'text-rose-900',
-      accent: 'text-rose-600'
+      text: 'text-rose-900 dark:text-rose-300',
+      accent: 'text-rose-600 dark:text-rose-400'
     },
     navy: {
-      bg: 'bg-slate-50 border-slate-200',
-      iconBg: 'bg-navy-800 text-white',
-      text: 'text-navy-900',
-      accent: 'text-navy-700'
+      bg: 'bg-slate-50 border-slate-200 dark:bg-slate-900 dark:border-slate-800',
+      iconBg: 'bg-navy-800 dark:bg-navy-700 text-white',
+      text: 'text-navy-900 dark:text-white',
+      accent: 'text-navy-700 dark:text-slate-300'
     }
   };
 
@@ -54,7 +54,7 @@ export const KPICard: React.FC<KPICardProps> = ({
   return (
     <div className={`rounded-xl border p-3.5 sm:p-5 shadow-sm transition-all hover:shadow-md min-w-0 ${style.bg}`}>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 truncate" title={title}>{title}</p>
+        <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate" title={title}>{title}</p>
         <div className={`rounded-lg p-1.5 sm:p-2.5 ${style.iconBg} shadow-sm flex-shrink-0`}>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
@@ -64,7 +64,7 @@ export const KPICard: React.FC<KPICardProps> = ({
           {value !== null && value !== undefined && value !== '' ? value : 'N/A'}
         </h3>
         {subtitle && (
-          <p className="mt-1 text-[11px] sm:text-xs text-slate-500 font-medium line-clamp-2">
+          <p className="mt-1 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2">
             {subtitle}
           </p>
         )}

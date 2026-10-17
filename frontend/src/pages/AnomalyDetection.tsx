@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAnalysis } from '../context/AnalysisContext';
+import { useTheme } from '../context/ThemeContext';
 import { api } from '../services/api';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import {
@@ -27,7 +28,16 @@ import {
 export const AnomalyDetection: React.FC = () => {
   const { getIdToken } = useAuth();
   const { activeTrain, activeAnomaly, setActiveAnomaly } = useAnalysis();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
+
+  // Theme-aware Recharts styling tokens
+  const gridStroke = isDark ? '#334155' : '#f1f5f9';
+  const axisTickColor = isDark ? '#94a3b8' : '#64748b';
+  const tooltipStyle = isDark
+    ? { backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc', borderRadius: '8px', fontSize: '11px' }
+    : { backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#fff', borderRadius: '8px', fontSize: '11px' };
+  const legendStyle = { fontSize: '11px', paddingTop: '8px', color: isDark ? '#94a3b8' : '#64748b' };
 
   // Method hyperparameters
   const [globalSigma, setGlobalSigma] = useState(3.0);
@@ -79,15 +89,15 @@ export const AnomalyDetection: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Multi-Method Anomaly Detection</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900 dark:text-white">Multi-Method Anomaly Detection</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Compare Global, Rolling, Isolation Forest, and Proposed Regime-Aware Adaptive thresholding.
           </p>
         </div>
         {activeAnomaly && (
           <button
             onClick={() => navigate('/anomalies/details')}
-            className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-navy-800 transition w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 dark:bg-blue-600 hover:bg-navy-800 dark:hover:bg-blue-700 px-4 py-2 text-xs font-semibold text-white shadow transition w-full sm:w-auto"
           >
             <span>Inspect Anomaly Details</span>
             <ArrowRight className="h-4 w-4" />
@@ -96,15 +106,15 @@ export const AnomalyDetection: React.FC = () => {
       </div>
 
       {error && (
-        <div className="flex items-center gap-3 rounded-lg bg-rose-50 p-4 text-sm text-rose-800 border border-rose-200">
-          <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
+        <div className="flex items-center gap-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 p-4 text-sm text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-900/50">
+          <AlertCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {!activeTrain && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 text-center shadow-sm">
-          <p className="text-sm text-slate-600 font-medium">Please train an energy prediction model first.</p>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 text-center shadow-sm">
+          <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">Please train an energy prediction model first.</p>
           <button
             onClick={() => navigate('/predict')}
             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition w-full sm:w-auto"
@@ -116,20 +126,20 @@ export const AnomalyDetection: React.FC = () => {
 
       {/* Threshold Configuration Controls */}
       {activeTrain && (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
-            <Sliders className="h-5 w-5 text-blue-600" />
-            <h2 className="text-base font-bold text-navy-900">Algorithm Parameter Tuning</h2>
+            <Sliders className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-base font-bold text-navy-900 dark:text-white">Algorithm Parameter Tuning</h2>
           </div>
-          <p className="text-xs text-slate-500 mb-6">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
             Configure threshold sensitivity factors calibrated on validation residuals (preventing test label leakage).
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div className="flex justify-between text-xs font-semibold text-slate-700">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-800/60 p-4">
+              <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span>Method 1: Global Threshold</span>
-                <span className="text-blue-600">{globalSigma}σ</span>
+                <span className="text-blue-600 dark:text-blue-400">{globalSigma}σ</span>
               </div>
               <input
                 type="range"
@@ -140,13 +150,13 @@ export const AnomalyDetection: React.FC = () => {
                 onChange={(e) => setGlobalSigma(parseFloat(e.target.value))}
                 className="mt-2 w-full accent-blue-600"
               />
-              <p className="mt-1 text-[11px] text-slate-400">Fixed threshold based on overall validation residual spread.</p>
+              <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">Fixed threshold based on overall validation residual spread.</p>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div className="flex justify-between text-xs font-semibold text-slate-700">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-800/60 p-4">
+              <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span>Method 2: Rolling Window</span>
-                <span className="text-amber-600">{rollingWindow}h / {rollingSigma}σ</span>
+                <span className="text-amber-600 dark:text-amber-400">{rollingWindow}h / {rollingSigma}σ</span>
               </div>
               <input
                 type="range"
@@ -157,13 +167,13 @@ export const AnomalyDetection: React.FC = () => {
                 onChange={(e) => setRollingSigma(parseFloat(e.target.value))}
                 className="mt-2 w-full accent-amber-600"
               />
-              <p className="mt-1 text-[11px] text-slate-400">Adapts to recent trailing residuals without future leakage.</p>
+              <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">Adapts to recent trailing residuals without future leakage.</p>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div className="flex justify-between text-xs font-semibold text-slate-700">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-800/60 p-4">
+              <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span>Method 3: Isolation Forest</span>
-                <span className="text-purple-600">{(iforestContam * 100).toFixed(1)}%</span>
+                <span className="text-purple-600 dark:text-purple-400">{(iforestContam * 100).toFixed(1)}%</span>
               </div>
               <input
                 type="range"
@@ -174,13 +184,13 @@ export const AnomalyDetection: React.FC = () => {
                 onChange={(e) => setIforestContam(parseFloat(e.target.value))}
                 className="mt-2 w-full accent-purple-600"
               />
-              <p className="mt-1 text-[11px] text-slate-400">Unsupervised tree isolation contamination hyperparameter.</p>
+              <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">Unsupervised tree isolation contamination hyperparameter.</p>
             </div>
 
-            <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
-              <div className="flex justify-between text-xs font-semibold text-navy-900">
+            <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/40 p-4">
+              <div className="flex justify-between text-xs font-semibold text-navy-900 dark:text-white">
                 <span>Method 4: Proposed Regime</span>
-                <span className="text-blue-700 font-bold">{regimeSigma}σ</span>
+                <span className="text-blue-700 dark:text-blue-400 font-bold">{regimeSigma}σ</span>
               </div>
               <input
                 type="range"
@@ -191,7 +201,7 @@ export const AnomalyDetection: React.FC = () => {
                 onChange={(e) => setRegimeSigma(parseFloat(e.target.value))}
                 className="mt-2 w-full accent-blue-600"
               />
-              <p className="mt-1 text-[11px] text-slate-500 font-medium">Distinct statistical threshold per operating state.</p>
+              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">Distinct statistical threshold per operating state.</p>
             </div>
           </div>
 
@@ -199,7 +209,7 @@ export const AnomalyDetection: React.FC = () => {
             <button
               onClick={handleDetect}
               disabled={loading}
-              className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-6 py-2.5 text-xs font-semibold text-white shadow hover:bg-navy-800 transition disabled:opacity-50 w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 dark:bg-blue-600 hover:bg-navy-800 dark:hover:bg-blue-700 px-6 py-2.5 text-xs font-semibold text-white shadow transition disabled:opacity-50 w-full sm:w-auto"
             >
               <AlertTriangle className="h-4 w-4 text-amber-400" />
               <span>{loading ? 'Executing Anomaly Detection...' : 'Run All 4 Detection Methods'}</span>
@@ -214,17 +224,17 @@ export const AnomalyDetection: React.FC = () => {
       {activeAnomaly && !loading && (
         <div className="space-y-6">
           {/* Method Comparison Table */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden min-w-0">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm overflow-hidden min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-              <h2 className="text-base font-bold text-navy-900">Comparative Method Evaluation Benchmark</h2>
+              <h2 className="text-base font-bold text-navy-900 dark:text-white">Comparative Method Evaluation Benchmark</h2>
               <span className={`px-2.5 py-1 rounded-full text-xs font-semibold self-start sm:self-auto ${
-                activeAnomaly.ground_truth_available ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'
+                activeAnomaly.ground_truth_available ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
               }`}>
                 {activeAnomaly.ground_truth_available ? 'Ground Truth Labeled' : 'Unlabeled (Supervised Metrics N/A)'}
               </span>
             </div>
 
-            <p className="text-xs text-slate-500 mb-6">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
               {activeAnomaly.ground_truth_available
                 ? 'Supervised metrics computed against ground truth labels on held-out test data. Proposed regime-aware method reduces false positive alarms while maintaining sharp precision.'
                 : 'Note: Dataset does not contain ground-truth anomaly labels. Anomaly detection counts and detection rates are displayed, but precision/recall cannot be evaluated without labels.'}
@@ -232,7 +242,7 @@ export const AnomalyDetection: React.FC = () => {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-600 uppercase border-b border-slate-200 font-semibold">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 uppercase border-b border-slate-200 dark:border-slate-800 font-semibold">
                   <tr>
                     <th className="py-3 px-4">Method Name</th>
                     <th className="py-3 px-4">Anomalies Detected</th>
@@ -244,30 +254,30 @@ export const AnomalyDetection: React.FC = () => {
                     <th className="py-3 px-4">FP / 1k Normals</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {activeAnomaly.method_comparison.map((m) => {
                     const isProposed = m.method_name.includes('Proposed');
                     return (
-                      <tr key={m.method_name} className={isProposed ? 'bg-blue-50/40 font-semibold' : 'hover:bg-slate-50/50'}>
-                        <td className="py-3 px-4 text-navy-900 flex items-center gap-2">
-                          {isProposed && <span className="h-2 w-2 rounded-full bg-blue-600" />}
+                      <tr key={m.method_name} className={isProposed ? 'bg-blue-50/40 dark:bg-blue-950/30 font-semibold' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/40'}>
+                        <td className="py-3 px-4 text-navy-900 dark:text-white flex items-center gap-2">
+                          {isProposed && <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400" />}
                           {m.method_name}
                         </td>
-                        <td className="py-3 px-4 font-mono text-slate-800">{m.anomalies_detected}</td>
-                        <td className="py-3 px-4 font-mono text-slate-800">{m.detection_rate_pct}%</td>
-                        <td className="py-3 px-4 font-mono text-slate-800">
+                        <td className="py-3 px-4 font-mono text-slate-800 dark:text-slate-200">{m.anomalies_detected}</td>
+                        <td className="py-3 px-4 font-mono text-slate-800 dark:text-slate-200">{m.detection_rate_pct}%</td>
+                        <td className="py-3 px-4 font-mono text-slate-800 dark:text-slate-200">
                           {m.precision !== null && m.precision !== undefined ? m.precision.toFixed(3) : 'N/A'}
                         </td>
-                        <td className="py-3 px-4 font-mono text-slate-800">
+                        <td className="py-3 px-4 font-mono text-slate-800 dark:text-slate-200">
                           {m.recall !== null && m.recall !== undefined ? m.recall.toFixed(3) : 'N/A'}
                         </td>
-                        <td className="py-3 px-4 font-mono text-slate-800">
+                        <td className="py-3 px-4 font-mono text-slate-800 dark:text-slate-200">
                           {m.f1_score !== null && m.f1_score !== undefined ? m.f1_score.toFixed(3) : 'N/A'}
                         </td>
-                        <td className="py-3 px-4 font-mono text-slate-800">
+                        <td className="py-3 px-4 font-mono text-slate-800 dark:text-slate-200">
                           {m.roc_auc !== null && m.roc_auc !== undefined ? m.roc_auc.toFixed(3) : 'N/A'}
                         </td>
-                        <td className="py-3 px-4 font-mono text-slate-800">
+                        <td className="py-3 px-4 font-mono text-slate-800 dark:text-slate-200">
                           {m.false_positives_per_1000 !== null && m.false_positives_per_1000 !== undefined
                             ? m.false_positives_per_1000.toFixed(2)
                             : 'N/A'}
@@ -283,18 +293,18 @@ export const AnomalyDetection: React.FC = () => {
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Detection Count Bar Chart */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
-              <h2 className="text-base font-bold text-navy-900 mb-2">Anomalies Detected Across Methods</h2>
-              <p className="text-xs text-slate-500 mb-6">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm min-w-0">
+              <h2 className="text-base font-bold text-navy-900 dark:text-white mb-2">Anomalies Detected Across Methods</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
                 Comparative count of anomalous instances flagged in the held-out test partition.
               </p>
               <div className="h-64 sm:h-72 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activeAnomaly.method_comparison}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="method_name" tick={{ fontSize: 9 }} interval={0} angle={-15} textAnchor="end" height={50} />
-                    <YAxis tick={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                    <XAxis dataKey="method_name" tick={{ fontSize: 9, fill: axisTickColor }} interval={0} angle={-15} textAnchor="end" height={50} />
+                    <YAxis tick={{ fontSize: 10, fill: axisTickColor }} />
+                    <Tooltip contentStyle={tooltipStyle} />
                     <Bar dataKey="anomalies_detected" name="Detected Anomalies" fill="#2563eb" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -302,9 +312,9 @@ export const AnomalyDetection: React.FC = () => {
             </div>
 
             {/* Operating Regime Breakdown */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm min-w-0">
-              <h2 className="text-base font-bold text-navy-900 mb-2">Operating Regime Distribution</h2>
-              <p className="text-xs text-slate-500 mb-6">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm min-w-0">
+              <h2 className="text-base font-bold text-navy-900 dark:text-white mb-2">Operating Regime Distribution</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
                 Distribution of building operation states (Occupied Peak, Off-Hours Night, Weekend, Thermal Load).
               </p>
               <div className="h-64 sm:h-72 w-full min-w-0 flex items-center justify-center">
@@ -324,8 +334,8 @@ export const AnomalyDetection: React.FC = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '11px' }} />
-                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={legendStyle} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

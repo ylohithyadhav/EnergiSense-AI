@@ -27,10 +27,10 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="hidden md:flex w-56 lg:w-64 flex-shrink-0 bg-navy-900 text-slate-300 flex-col justify-between min-h-[calc(100vh-4rem)] border-r border-navy-800">
+    <aside className="hidden md:flex w-56 lg:w-64 flex-shrink-0 bg-navy-900 dark:bg-slate-900 text-slate-300 dark:text-slate-200 flex-col justify-between min-h-[calc(100vh-4rem)] border-r border-navy-800 dark:border-slate-800 transition-colors duration-150">
       <div className="p-4 space-y-6">
         <div>
-          <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Analytics & Operations
           </p>
           <nav className="mt-3 space-y-1">
@@ -44,7 +44,7 @@ export const Sidebar: React.FC = () => {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       isActive
                         ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
-                        : 'text-slate-300 hover:bg-navy-800 hover:text-white'
+                        : 'text-slate-300 dark:text-slate-300 hover:bg-navy-800 dark:hover:bg-slate-800 hover:text-white'
                     }`
                   }
                 >
@@ -56,20 +56,20 @@ export const Sidebar: React.FC = () => {
           </nav>
         </div>
 
-        <div className="rounded-xl bg-navy-800/80 p-3.5 border border-navy-700/50">
+        <div className="rounded-xl bg-navy-800/80 dark:bg-slate-800/80 p-3.5 border border-navy-700/50 dark:border-slate-700/50">
           <div className="flex items-center gap-2 text-cyan-400">
             <ShieldCheck className="h-4 w-4" />
             <span className="text-xs font-semibold">Regime-Aware ML</span>
           </div>
-          <p className="mt-1 text-[11px] text-slate-400 leading-relaxed">
+          <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-400 leading-relaxed">
             LightGBM baseline with adaptive thermal & occupancy residual thresholding.
           </p>
         </div>
       </div>
 
-      <div className="p-4 border-t border-navy-800 text-[11px] text-slate-400">
-        <p className="font-medium text-slate-300">B.Tech CSE Capstone</p>
-        <p className="text-[10px] text-slate-400">Zero-Cost Cloud Deployment</p>
+      <div className="p-4 border-t border-navy-800 dark:border-slate-800 text-[11px] text-slate-400 dark:text-slate-500">
+        <p className="font-medium text-slate-300 dark:text-slate-400">B.Tech CSE Capstone</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-500">Zero-Cost Cloud Deployment</p>
       </div>
     </aside>
   );

@@ -147,47 +147,47 @@ export const DatasetUpload: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Dataset Ingestion & Validation</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900 dark:text-white">Dataset Ingestion & Validation</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Upload commercial or institutional smart building hourly CSV energy telemetry.
           </p>
         </div>
         <button
           onClick={handleLoadDemoDataset}
           disabled={loading}
-          className="flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition shadow-sm w-full sm:w-auto"
+          className="flex items-center justify-center gap-2 rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 px-4 py-2 text-xs font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition shadow-sm w-full sm:w-auto"
         >
-          <Sparkles className="h-4 w-4 text-blue-600" />
+          <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           <span>Load Synthetic Demo Dataset</span>
         </button>
       </div>
 
       {error && (
-        <div className="flex items-center gap-3 rounded-lg bg-rose-50 p-4 text-sm text-rose-800 border border-rose-200">
-          <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
+        <div className="flex items-center gap-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 p-4 text-sm text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-900/50">
+          <AlertCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="flex items-center gap-3 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-800 border border-emerald-200">
-          <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+        <div className="flex items-center gap-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 p-4 text-sm text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-900/50">
+          <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
           <span>{success}</span>
         </div>
       )}
 
       {/* Upload Box */}
-      <div className="rounded-xl border border-dashed border-slate-300 bg-white p-5 sm:p-8 text-center shadow-sm">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+      <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-8 text-center shadow-sm">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
           <UploadCloud className="h-7 w-7" />
         </div>
-        <h3 className="mt-4 text-base font-semibold text-navy-900">Choose CSV Dataset</h3>
-        <p className="mt-1 text-xs text-slate-500">
+        <h3 className="mt-4 text-base font-semibold text-navy-900 dark:text-white">Choose CSV Dataset</h3>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           Accepted format: .csv (Max size: 50 MB). Observations should be chronologically ordered.
         </p>
 
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <label className="cursor-pointer rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-semibold text-white shadow hover:bg-navy-800 transition w-full sm:w-auto text-center">
+          <label className="cursor-pointer rounded-lg bg-navy-900 dark:bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white shadow hover:bg-navy-800 dark:hover:bg-blue-700 transition w-full sm:w-auto text-center">
             Browse File
             <input
               type="file"
@@ -197,7 +197,7 @@ export const DatasetUpload: React.FC = () => {
             />
           </label>
           {file && (
-            <span className="text-xs font-medium text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 max-w-full truncate">
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 max-w-full truncate">
               {file.name} ({(file.size / 1024).toFixed(1)} KB)
             </span>
           )}
@@ -219,84 +219,84 @@ export const DatasetUpload: React.FC = () => {
         <div className="space-y-6">
           {/* Summary KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm min-w-0">
-              <p className="text-xs text-slate-500 uppercase font-semibold">Total Records</p>
-              <p className="mt-1 text-2xl font-bold text-navy-900">{activeUpload.total_rows.toLocaleString()}</p>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm min-w-0">
+              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Total Records</p>
+              <p className="mt-1 text-2xl font-bold text-navy-900 dark:text-white">{activeUpload.total_rows.toLocaleString()}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm min-w-0">
-              <p className="text-xs text-slate-500 uppercase font-semibold">Total Columns</p>
-              <p className="mt-1 text-2xl font-bold text-navy-900">{activeUpload.total_columns}</p>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm min-w-0">
+              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Total Columns</p>
+              <p className="mt-1 text-2xl font-bold text-navy-900 dark:text-white">{activeUpload.total_columns}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm min-w-0">
-              <p className="text-xs text-slate-500 uppercase font-semibold">Identified Target</p>
-              <p className="mt-1 text-lg font-bold text-blue-600 truncate">{targetCol || 'Unassigned'}</p>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm min-w-0">
+              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Identified Target</p>
+              <p className="mt-1 text-lg font-bold text-blue-600 dark:text-blue-400 truncate">{targetCol || 'Unassigned'}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm min-w-0">
-              <p className="text-xs text-slate-500 uppercase font-semibold">Input Features</p>
-              <p className="mt-1 text-2xl font-bold text-emerald-600">{selectedFeatures.length}</p>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm min-w-0">
+              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Input Features</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{selectedFeatures.length}</p>
             </div>
           </div>
 
           {/* Column Mapping Section */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
-              <Info className="h-5 w-5 text-blue-600" />
-              <h2 className="text-base font-bold text-navy-900">Flexible Column Mapping Interface</h2>
+              <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-base font-bold text-navy-900 dark:text-white">Flexible Column Mapping Interface</h2>
             </div>
-            <p className="text-xs text-slate-500 mb-6">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
               EnergiSense AI does not assume hardcoded column names. Designate your dataset's columns below:
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-slate-700">Timestamp Column *</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Timestamp Column *</label>
                 <select
                   value={timestampCol}
                   onChange={(e) => setTimestampCol(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-blue-600 focus:outline-none bg-white"
+                  className="mt-1.5 w-full rounded-lg border border-slate-300 dark:border-slate-700 p-2 text-xs focus:border-blue-600 focus:outline-none bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                 >
                   <option value="">-- Select Timestamp --</option>
                   {activeUpload.columns.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
-                <p className="mt-1 text-[11px] text-slate-500">Used for chronological sorting and time features.</p>
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Used for chronological sorting and time features.</p>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700">Building ID Column *</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Building ID Column *</label>
                 <select
                   value={buildingCol}
                   onChange={(e) => setBuildingCol(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-blue-600 focus:outline-none bg-white"
+                  className="mt-1.5 w-full rounded-lg border border-slate-300 dark:border-slate-700 p-2 text-xs focus:border-blue-600 focus:outline-none bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                 >
                   <option value="">-- Select Building ID --</option>
                   {activeUpload.columns.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
-                <p className="mt-1 text-[11px] text-slate-500">Identifies separate physical facility meters.</p>
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Identifies separate physical facility meters.</p>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700">Target Energy Column *</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Target Energy Column *</label>
                 <select
                   value={targetCol}
                   onChange={(e) => setTargetCol(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-blue-600 focus:outline-none bg-white"
+                  className="mt-1.5 w-full rounded-lg border border-slate-300 dark:border-slate-700 p-2 text-xs focus:border-blue-600 focus:outline-none bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                 >
                   <option value="">-- Select Energy (kWh / Load) --</option>
                   {activeUpload.columns.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
-                <p className="mt-1 text-[11px] text-slate-500">The continuous numerical target to predict.</p>
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">The continuous numerical target to predict.</p>
               </div>
             </div>
 
             {/* Feature Selection Checkboxes */}
-            <div className="mt-6 border-t border-slate-100 pt-5">
-              <label className="block text-xs font-semibold text-slate-700 mb-2">
+            <div className="mt-6 border-t border-slate-100 dark:border-slate-800 pt-5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                 Predictive Input Features (Weather, Occupancy, Schedules):
               </label>
               <div className="flex flex-wrap gap-2">
@@ -312,7 +312,7 @@ export const DatasetUpload: React.FC = () => {
                         className={`rounded-lg px-3 py-1.5 text-xs font-medium transition border ${
                           isSelected
                             ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
                       >
                         {isSelected ? '✓ ' : '+ '} {col}
@@ -326,7 +326,7 @@ export const DatasetUpload: React.FC = () => {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={handleProceed}
-                className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-6 py-2.5 text-xs font-semibold text-white shadow hover:bg-navy-800 transition w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 rounded-lg bg-navy-900 dark:bg-blue-600 hover:bg-navy-800 dark:hover:bg-blue-700 px-6 py-2.5 text-xs font-semibold text-white shadow transition w-full sm:w-auto"
               >
                 <span>Proceed to Energy Prediction Pipeline</span>
                 <ArrowRight className="h-4 w-4" />
@@ -335,11 +335,11 @@ export const DatasetUpload: React.FC = () => {
           </div>
 
           {/* Dataset Inspection Table */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden min-w-0">
-            <h2 className="text-base font-bold text-navy-900 mb-4">Dataset Columns Inspection & Missing Value Audit</h2>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm overflow-hidden min-w-0">
+            <h2 className="text-base font-bold text-navy-900 dark:text-white mb-4">Dataset Columns Inspection & Missing Value Audit</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-600 uppercase border-b border-slate-200">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 uppercase border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-2.5 px-4 font-semibold">Column</th>
                     <th className="py-2.5 px-4 font-semibold">Detected Type</th>
@@ -348,20 +348,20 @@ export const DatasetUpload: React.FC = () => {
                     <th className="py-2.5 px-4 font-semibold">Sample Values</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-mono">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
                   {activeUpload.column_details.map((col) => (
-                    <tr key={col.name} className="hover:bg-slate-50/50">
-                      <td className="py-2.5 px-4 font-semibold text-navy-900 font-sans">{col.name}</td>
-                      <td className="py-2.5 px-4 text-slate-600">{col.dtype}</td>
-                      <td className="py-2.5 px-4 text-slate-600">{col.missing_count}</td>
+                    <tr key={col.name} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                      <td className="py-2.5 px-4 font-semibold text-navy-900 dark:text-white font-sans">{col.name}</td>
+                      <td className="py-2.5 px-4 text-slate-600 dark:text-slate-300">{col.dtype}</td>
+                      <td className="py-2.5 px-4 text-slate-600 dark:text-slate-300">{col.missing_count}</td>
                       <td className="py-2.5 px-4">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                          col.missing_percentage === 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                          col.missing_percentage === 0 ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
                         }`}>
                           {col.missing_percentage}%
                         </span>
                       </td>
-                      <td className="py-2.5 px-4 text-slate-500 truncate max-w-xs">
+                      <td className="py-2.5 px-4 text-slate-500 dark:text-slate-400 truncate max-w-xs">
                         {col.sample_values.join(', ')}
                       </td>
                     </tr>
