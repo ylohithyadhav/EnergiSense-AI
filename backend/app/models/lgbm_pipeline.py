@@ -15,6 +15,30 @@ def get_analysis_state(analysis_id: str) -> Optional[Dict[str, Any]]:
 def set_analysis_state(analysis_id: str, state: Dict[str, Any]):
     _ANALYSES_STORE[analysis_id] = state
 
+def verify_analysis_ownership(analysis_id: str, user_id: Optional[str] = None) -> Dict[str, Any]:
+    state = get_analysis_state(analysis_id)
+    if not state:
+        raise ValueError(f"Analysis '{analysis_id}' not found.")
+    owner_id = state.get("user_id")
+    if owner_id != user_id:
+        raise PermissionError(f"Access denied to analysis '{analysis_id}'.")
+    return state
+
+def remove_analyses_by_file_id(file_id: str, user_id: str) -> List[str]:
+    """
+    Invalidates/removes active analyses in _ANALYSES_STORE associated with file_id
+    and strictly owned by user_id. Returns list of invalidated analysis_ids.
+    """
+    removed = []
+    to_delete = [
+        aid for aid, st in _ANALYSES_STORE.items()
+        if st.get("file_id") == file_id and st.get("user_id") == user_id
+    ]
+    for aid in to_delete:
+        _ANALYSES_STORE.pop(aid, None)
+        removed.append(aid)
+    return removed
+
 def engineer_time_features(df: pd.DataFrame, timestamp_col: str) -> pd.DataFrame:
     """
     Extracts chronological and cyclical time features from timestamp.
@@ -76,7 +100,9 @@ def train_lightgbm_pipeline(
     train_split: float = 0.70,
     val_split: float = 0.15,
     test_split: float = 0.15,
-    dataset_name: str = "Energy Dataset"
+    dataset_name: str = "Energy Dataset",
+    user_id: Optional[str] = None,
+    file_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Executes chronological validation and training pipeline with LightGBM.
@@ -192,6 +218,8 @@ def train_lightgbm_pipeline(
     analysis_id = str(uuid.uuid4())
     state = {
         "analysis_id": analysis_id,
+        "user_id": user_id,
+        "file_id": file_id,
         "dataset_name": dataset_name,
         "model": model,
         "feature_names": feature_names,
@@ -223,6 +251,7 @@ def train_lightgbm_pipeline(
 
     return {
         "analysis_id": analysis_id,
+        "user_id": user_id,
         "dataset_name": dataset_name,
         "model_name": "LightGBM Regressor (Regime-Aware)",
         "train_rows": len(X_train),

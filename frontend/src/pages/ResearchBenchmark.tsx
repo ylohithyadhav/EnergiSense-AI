@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -9,12 +9,22 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { Award, BookOpen, AlertCircle, CheckCircle2, ShieldCheck, Info } from 'lucide-react';
+import { Award, BookOpen, AlertCircle, CheckCircle2, ShieldCheck, Info, X, ExternalLink } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { KPICard } from '../components/KPICard';
 
 export const ResearchBenchmark: React.FC = () => {
   const { isDark } = useTheme();
+  const [showModal, setShowModal] = useState(false);
+  const referenceUrl = import.meta.env.VITE_RESEARCH_DATASET_URL;
+
+  const handleResourceClick = () => {
+    if (referenceUrl && typeof referenceUrl === 'string' && referenceUrl.trim().startsWith('http')) {
+      window.open(referenceUrl.trim(), '_blank', 'noopener,noreferrer');
+    } else {
+      setShowModal(true);
+    }
+  };
 
   // Theme-aware Recharts styling tokens
   const gridStroke = isDark ? '#334155' : '#f1f5f9';
@@ -79,10 +89,15 @@ export const ResearchBenchmark: React.FC = () => {
             LEAD 1.0 Empirical Reference Performance on 30 Deterministically Selected Smart Buildings.
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 px-3 py-1.5 text-xs text-blue-800 dark:text-blue-300 font-semibold">
+        <button
+          type="button"
+          onClick={handleResourceClick}
+          className="flex items-center gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 px-3 py-1.5 text-xs text-blue-800 dark:text-blue-300 font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/60 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          title="View reference literature dataset details"
+        >
           <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           <span>Reference Literature Dataset</span>
-        </div>
+        </button>
       </div>
 
       {/* Prominent Verification & Attribution Alert */}
@@ -242,6 +257,68 @@ export const ResearchBenchmark: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Reference Literature Dataset Information Modal */}
+      {showModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+        >
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-navy-900 dark:text-white">Reference Literature Dataset</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">LEAD 1.0 Smart Building Energy Benchmark</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/70 dark:bg-amber-950/30 p-3.5 flex items-start gap-2.5">
+              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed font-medium">
+                Direct external dataset repository link is not configured in this deployment environment.
+              </p>
+            </div>
+
+            <div className="text-xs text-slate-600 dark:text-slate-300 space-y-2 leading-relaxed">
+              <p>
+                The standardized benchmark performance figures presented on this page are established empirical metrics from published literature on the <strong>LEAD 1.0 (Large-scale Energy Anomaly Detection)</strong> benchmark dataset.
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-slate-500 dark:text-slate-400 pl-1">
+                <li><strong>Scope:</strong> First 30 deterministically sorted commercial and institutional buildings.</li>
+                <li><strong>Volume:</strong> 198,030 hourly observations (29,698 chronologically held-out test records).</li>
+                <li><strong>Ground Truth:</strong> 2.92% verified anomaly prevalence under historical operational regimes.</li>
+                <li><strong>Purpose:</strong> Serves strictly as a standardized baseline of reference comparison and is maintained independently from user-uploaded data.</li>
+              </ul>
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] pt-1">
+                To run live predictions, anomaly detection, and SHAP explainability on concrete building telemetry, load the pre-calibrated sample dataset from the <em>Dataset Ingestion</em> page.
+              </p>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="rounded-lg bg-navy-900 dark:bg-blue-600 hover:bg-navy-800 dark:hover:bg-blue-700 px-5 py-2 text-xs font-semibold text-white shadow transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

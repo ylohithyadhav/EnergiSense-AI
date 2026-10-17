@@ -3,22 +3,21 @@ import numpy as np
 import pandas as pd
 import shap
 from typing import Dict, Any, List, Optional
-from app.models.lgbm_pipeline import get_analysis_state
+from app.models.lgbm_pipeline import get_analysis_state, verify_analysis_ownership
 
 logger = logging.getLogger("energisense.shap")
 
 def compute_shap_explanations(
     analysis_id: str,
     sample_size: int = 80,
-    record_index: Optional[int] = None
+    record_index: Optional[int] = None,
+    user_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Computes genuine SHAP values for LightGBM model using TreeExplainer.
     Provides global feature impact and optional local waterfall breakdown for a given record.
     """
-    state = get_analysis_state(analysis_id)
-    if not state:
-        raise ValueError(f"Analysis '{analysis_id}' not found.")
+    state = verify_analysis_ownership(analysis_id, user_id=user_id)
 
     model = state.get("model")
     X_test = state.get("X_test")
@@ -27,6 +26,24 @@ def compute_shap_explanations(
 
     if model is None or X_test is None or test_meta_df is None:
         raise ValueError("ML model or evaluation data missing for SHAP computation.")
+
+    if len(X_test) == 0:
+        raise ValueError("Evaluation test dataset is empty. Cannot compute SHAP explanations.")
+
+    if record_index is not None:
+        if not isinstance(record_index, int) or record_index < 0 or record_index >= len(X_test):
+            raise ValueError(
+                f"Invalid record_index {record_index}. Must be an integer between 0 and {len(X_test) - 1}."
+            )
+        idx = record_index
+    else:
+        # Default to first anomalous record or first record
+        idx = 0
+        if "anomaly_records" in state and len(state["anomaly_records"]) > 0:
+            for rec in state["anomaly_records"]:
+                if rec.get("is_anomaly") and 0 <= rec.get("index", -1) < len(X_test):
+                    idx = rec["index"]
+                    break
 
     # 1. Take a representative sample for TreeExplainer computation
     sample_n = min(sample_size, len(X_test))
@@ -40,6 +57,9 @@ def compute_shap_explanations(
         if isinstance(shap_values, list):
             shap_values = shap_values[0]
             
+        if not np.all(np.isfinite(shap_values)):
+            raise RuntimeError("Computed SHAP values contain non-finite numbers (NaN/Inf).")
+
         base_value = float(explainer.expected_value) if np.isscalar(explainer.expected_value) else float(explainer.expected_value[0])
     except Exception as e:
         logger.error(f"SHAP TreeExplainer calculation error: {e}")
@@ -49,6 +69,8 @@ def compute_shap_explanations(
     mean_abs_shap = np.mean(np.abs(shap_values), axis=0)
     total_shap_mass = np.sum(mean_abs_shap) + 1e-9
     norm_shap = mean_abs_shap / total_shap_mass
+    if not np.all(np.isfinite(norm_shap)):
+        raise RuntimeError("Normalized SHAP importance contains non-finite numbers.")
 
     global_importance = [
         {"feature": feat, "importance": round(float(imp), 4)}
@@ -57,17 +79,6 @@ def compute_shap_explanations(
 
     # 3. Individual explanation for selected record or highest anomaly
     individual_exp = None
-    if record_index is not None and 0 <= record_index < len(X_test):
-        idx = record_index
-    else:
-        # Default to first anomalous record or first record
-        idx = 0
-        if "anomaly_records" in state and len(state["anomaly_records"]) > 0:
-            for rec in state["anomaly_records"]:
-                if rec.get("is_anomaly"):
-                    idx = rec["index"]
-                    break
-
     try:
         # Compute exact SHAP values for this specific row
         single_row = X_test.iloc[[idx]]
@@ -75,6 +86,9 @@ def compute_shap_explanations(
         if isinstance(single_shap, list):
             single_shap = single_shap[0]
         single_shap = single_shap[0]
+
+        if not np.all(np.isfinite(single_shap)):
+            raise RuntimeError(f"Local SHAP values for record {idx} contain non-finite numbers.")
 
         meta_row = test_meta_df.iloc[idx]
         bldg = str(meta_row[state["building_col"]])

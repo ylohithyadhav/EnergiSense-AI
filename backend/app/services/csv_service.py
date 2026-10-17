@@ -13,11 +13,64 @@ _DATASET_METADATA: Dict[str, Dict[str, Any]] = {}
 def get_stored_dataset(file_id: str) -> Optional[pd.DataFrame]:
     return _DATASET_STORE.get(file_id)
 
+def get_stored_dataset_metadata(file_id: str) -> Optional[Dict[str, Any]]:
+    return _DATASET_METADATA.get(file_id)
+
 def set_stored_dataset(file_id: str, df: pd.DataFrame, meta: Dict[str, Any]):
     _DATASET_STORE[file_id] = df
     _DATASET_METADATA[file_id] = meta
 
-async def process_and_validate_csv(file: UploadFile, max_size_mb: int = 50) -> Dict[str, Any]:
+def verify_dataset_ownership(file_id: str, user_id: Optional[str] = None) -> Dict[str, Any]:
+    meta = get_stored_dataset_metadata(file_id)
+    if not meta:
+        raise ValueError(f"Dataset '{file_id}' not found.")
+    owner_id = meta.get("user_id")
+    if owner_id != user_id:
+        raise PermissionError(f"Access denied to dataset '{file_id}'.")
+    return meta
+
+def delete_stored_dataset(file_id: str, user_id: str) -> Dict[str, Any]:
+    """
+    Securely deletes a stored dataset and associated in-memory metadata
+    after verifying that user_id strictly matches the dataset's owner_id.
+    Invalidates associated analyses and cleans up any physical files.
+    """
+    if not user_id:
+        raise PermissionError("A valid user_id is required to delete a dataset.")
+
+    meta = verify_dataset_ownership(file_id, user_id=user_id)
+
+    # 1. Clean up physical file if any path is recorded in metadata
+    file_path = meta.get("file_path")
+    if file_path and isinstance(file_path, str):
+        import os
+        safe_path = os.path.abspath(file_path)
+        sample_path = os.path.abspath("data/sample_energy_data.csv")
+        # Ensure we never delete the shared reference dataset
+        if safe_path != sample_path and os.path.exists(safe_path):
+            try:
+                os.remove(safe_path)
+            except Exception as e:
+                raise RuntimeError(f"Failed to delete underlying dataset file: {str(e)}")
+
+    # 2. Invalidate associated in-memory analyses
+    from app.models.lgbm_pipeline import remove_analyses_by_file_id
+    invalidated_analyses = remove_analyses_by_file_id(file_id=file_id, user_id=user_id)
+
+    # 3. Clean up dataset and metadata stores
+    _DATASET_STORE.pop(file_id, None)
+    _DATASET_METADATA.pop(file_id, None)
+
+    filename = meta.get("filename", file_id)
+    return {
+        "file_id": file_id,
+        "deleted": True,
+        "filename": filename,
+        "invalidated_analyses": invalidated_analyses,
+        "message": f"Dataset '{filename}' successfully deleted."
+    }
+
+async def process_and_validate_csv(file: UploadFile, max_size_mb: int = 50, user_id: Optional[str] = None) -> Dict[str, Any]:
     # 1. Validate file extension
     if not file.filename.lower().endswith(".csv"):
         raise HTTPException(
@@ -121,7 +174,8 @@ async def process_and_validate_csv(file: UploadFile, max_size_mb: int = 50) -> D
     set_stored_dataset(file_id, df, {
         "filename": file.filename,
         "rows": total_rows,
-        "cols": total_cols
+        "cols": total_cols,
+        "user_id": user_id
     })
 
     return {

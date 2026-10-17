@@ -13,13 +13,109 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell
+  Cell,
+  ReferenceLine
 } from 'recharts';
 import {
   AlertCircle,
   Sparkles,
   Info
 } from 'lucide-react';
+import { SHAPContribution } from '../types';
+
+export const formatFeatureLabel = (name: string): string => {
+  if (!name) return '';
+  if (name.startsWith('bldg_Building_')) {
+    return name.replace('bldg_Building_', '').replace(/_/g, ' ');
+  }
+  if (name.startsWith('bldg_')) {
+    return name.replace('bldg_', '').replace(/_/g, ' ');
+  }
+  return name
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
+interface TooltipPayloadItem {
+  payload: SHAPContribution;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+}
+
+const CustomIndividualTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const isPos = data.shap_value >= 0;
+    return (
+      <div className="rounded-lg border border-slate-700 bg-slate-900/95 p-3 text-xs text-white shadow-xl backdrop-blur-sm max-w-xs">
+        <p className="font-semibold text-slate-200">{formatFeatureLabel(data.feature)}</p>
+        <p className="font-mono text-[10px] text-slate-400 mb-2">key: {data.feature}</p>
+        <div className="space-y-1.5">
+          <div className="flex justify-between gap-4">
+            <span className="text-slate-400">Observed Value:</span>
+            <span className="font-mono font-medium text-slate-200">
+              {String(data.feature_value)}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-slate-400">SHAP Impact (Δ):</span>
+            <span className={`font-mono font-bold ${isPos ? 'text-rose-400' : 'text-emerald-400'}`}>
+              {isPos ? '+' : ''}{data.shap_value} kWh
+            </span>
+          </div>
+          <p className="pt-1.5 border-t border-slate-800 text-[10px] text-slate-300 leading-normal">
+            {isPos
+              ? `Increases prediction by ${Math.abs(data.shap_value)} kWh above base load.`
+              : `Decreases prediction by ${Math.abs(data.shap_value)} kWh below base load.`}
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+interface GlobalPayloadItem {
+  payload: {
+    feature: string;
+    importance: number;
+    percentage: number;
+    formattedFeature: string;
+  };
+}
+
+const CustomGlobalTooltip: React.FC<{ active?: boolean; payload?: GlobalPayloadItem[] }> = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="rounded-lg border border-slate-700 bg-slate-900/95 p-3 text-xs text-white shadow-xl backdrop-blur-sm max-w-xs">
+        <p className="font-semibold text-slate-200">{data.formattedFeature}</p>
+        <p className="font-mono text-[10px] text-slate-400 mb-2">key: {data.feature}</p>
+        <div className="space-y-1.5">
+          <div className="flex justify-between gap-4">
+            <span className="text-slate-400">Relative SHAP Impact:</span>
+            <span className="font-mono font-bold text-cyan-400">
+              {data.percentage}%
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-slate-400">Normalized Proportion:</span>
+            <span className="font-mono text-slate-300">
+              {data.importance}
+            </span>
+          </div>
+          <p className="pt-1 border-t border-slate-800 text-[10px] text-slate-400">
+            Share of overall mean absolute SHAP impact across the evaluation set.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 export const ExplainableAI: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -34,9 +130,7 @@ export const ExplainableAI: React.FC = () => {
   // Theme-aware Recharts styling tokens
   const gridStroke = isDark ? '#334155' : '#f1f5f9';
   const axisTickColor = isDark ? '#94a3b8' : '#64748b';
-  const tooltipStyle = isDark
-    ? { backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc', borderRadius: '8px', fontSize: '11px' }
-    : { backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#fff', borderRadius: '8px', fontSize: '11px' };
+  const referenceLineColor = isDark ? '#64748b' : '#94a3b8';
 
   const [recordIndex, setRecordIndex] = useState(initialIndex);
   const sampleSize = 80;
@@ -82,6 +176,27 @@ export const ExplainableAI: React.FC = () => {
       }
     }
   }, [recordParam]);
+
+  // Individual explanation domain & data
+  const individualContribs = activeSHAP?.individual_explanation?.contributions || [];
+  const shapVals = individualContribs.map(c => Number(c.shap_value) || 0);
+  const minShap = shapVals.length > 0 ? Math.min(...shapVals, 0) : -5;
+  const maxShap = shapVals.length > 0 ? Math.max(...shapVals, 0) : 5;
+  const padNeg = Math.min(minShap * 1.15, -1);
+  const padPos = Math.max(maxShap * 1.15, 1);
+  const individualXDomain: [number, number] = [
+    Math.floor(padNeg),
+    Math.ceil(padPos)
+  ];
+
+  // Global importance percentage data sorted descending
+  const globalData = (activeSHAP?.global_importance || [])
+    .map(item => ({
+      ...item,
+      percentage: Number(((Number(item.importance) || 0) * 100).toFixed(1)),
+      formattedFeature: formatFeatureLabel(item.feature)
+    }))
+    .sort((a, b) => b.percentage - a.percentage);
 
   return (
     <div className="space-y-6">
@@ -175,22 +290,49 @@ export const ExplainableAI: React.FC = () => {
               </div>
 
               {/* Local Waterfall / Bar Chart */}
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                Feature Contribution Push (Δ kWh relative to Base Expected Value {activeSHAP.base_value} kWh)
-              </h3>
-              <div className="h-64 w-full min-w-0">
+              <div className="mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                  Individual Feature Contribution Push (Top 10 Factors by Absolute Impact)
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Diverging SHAP breakdown (Δ kWh relative to Base Expected Value: <span className="font-semibold text-slate-700 dark:text-slate-200">{activeSHAP.base_value} kWh</span>). Model prediction: <span className="font-semibold text-slate-700 dark:text-slate-200">{activeSHAP.individual_explanation.predicted_energy} kWh</span> (Actual: {activeSHAP.individual_explanation.actual_energy} kWh).
+                </p>
+              </div>
+
+              <div className="h-80 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={activeSHAP.individual_explanation.contributions} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                    <XAxis type="number" tick={{ fontSize: 10, fill: axisTickColor }} unit=" kWh" />
-                    <YAxis dataKey="feature" type="category" width={85} tick={{ fontSize: 9, fill: axisTickColor }} />
-                    <Tooltip
-                      contentStyle={tooltipStyle}
-                      formatter={(val: any) => [`${val > 0 ? '+' : ''}${val} kWh`, 'SHAP Impact']}
+                  <BarChart
+                    data={individualContribs}
+                    layout="vertical"
+                    margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} horizontal={false} />
+                    <XAxis
+                      type="number"
+                      domain={individualXDomain}
+                      tick={{ fontSize: 10, fill: axisTickColor }}
+                      unit=" kWh"
                     />
-                    <Bar dataKey="shap_value" radius={[2, 2, 2, 2]}>
-                      {activeSHAP.individual_explanation.contributions.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.shap_value >= 0 ? '#ef4444' : '#10b981'} />
+                    <YAxis
+                      dataKey="feature"
+                      type="category"
+                      width={140}
+                      tick={{ fontSize: 10, fill: axisTickColor }}
+                      tickFormatter={formatFeatureLabel}
+                    />
+                    <ReferenceLine
+                      x={0}
+                      stroke={referenceLineColor}
+                      strokeWidth={1.5}
+                      strokeDasharray="3 3"
+                    />
+                    <Tooltip content={<CustomIndividualTooltip />} />
+                    <Bar dataKey="shap_value" barSize={16} minPointSize={3}>
+                      {individualContribs.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.shap_value >= 0 ? '#ef4444' : '#10b981'}
+                        />
                       ))}
                     </Bar>
                   </BarChart>
@@ -200,34 +342,64 @@ export const ExplainableAI: React.FC = () => {
               <div className="mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs text-slate-500 dark:text-slate-400 font-medium">
                 <div className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded bg-rose-500" />
-                  <span>Positive Push (Increases Energy Prediction)</span>
+                  <span>Positive Push (+ kWh increases model prediction above base)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded bg-emerald-500" />
-                  <span>Negative Push (Decreases Energy Prediction)</span>
+                  <span>Negative Push (- kWh decreases model prediction below base)</span>
                 </div>
               </div>
+              <p className="mt-2 text-center text-[10px] text-slate-400 dark:text-slate-500">
+                Note: Displays top 10 dominant factors by absolute magnitude. Zero reference line denotes base expected energy.
+              </p>
             </div>
           )}
 
           {/* Global SHAP Feature Importance */}
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm min-w-0">
-            <h2 className="text-base font-bold text-navy-900 dark:text-white mb-2">Global Feature Importance (Mean |SHAP Value|)</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
-              Average magnitude of impact across evaluation dataset. Demonstrates which external drivers most significantly steer predictions.
+            <h2 className="text-base font-bold text-navy-900 dark:text-white mb-1">
+              Global Feature Importance (Relative SHAP Impact %)
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              Relative proportion of total mean absolute SHAP impact across the evaluation dataset. Quantifies which external drivers most significantly steer predictions.
             </p>
 
-            <div className="h-64 w-full min-w-0">
+            <div className="h-80 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={activeSHAP.global_importance} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: axisTickColor }} />
-                  <YAxis dataKey="feature" type="category" width={85} tick={{ fontSize: 9, fill: axisTickColor }} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="importance" name="Mean |SHAP|" fill="#06b6d4" radius={[0, 4, 4, 0]} />
+                <BarChart
+                  data={globalData}
+                  layout="vertical"
+                  margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} horizontal={false} />
+                  <XAxis
+                    type="number"
+                    unit="%"
+                    tick={{ fontSize: 10, fill: axisTickColor }}
+                    domain={[0, 'dataMax + 5']}
+                  />
+                  <YAxis
+                    dataKey="feature"
+                    type="category"
+                    width={140}
+                    tick={{ fontSize: 10, fill: axisTickColor }}
+                    tickFormatter={formatFeatureLabel}
+                  />
+                  <Tooltip content={<CustomGlobalTooltip />} />
+                  <Bar
+                    dataKey="percentage"
+                    name="Relative Impact"
+                    fill="#06b6d4"
+                    radius={[0, 4, 4, 0]}
+                    barSize={16}
+                    minPointSize={3}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            <p className="mt-2 text-center text-[10px] text-slate-400 dark:text-slate-500">
+              Bars denote relative contribution share (% of total Mean |SHAP| impact). Features sorted by descending influence.
+            </p>
           </div>
         </div>
       )}

@@ -6,7 +6,7 @@ from sklearn.metrics import (
     precision_score, recall_score, f1_score,
     precision_recall_curve, roc_auc_score, auc
 )
-from app.models.lgbm_pipeline import get_analysis_state
+from app.models.lgbm_pipeline import get_analysis_state, verify_analysis_ownership
 
 def calculate_supervised_metrics(y_true: np.ndarray, y_pred: np.ndarray, scores: np.ndarray) -> Dict[str, float]:
     """
@@ -67,11 +67,10 @@ def run_anomaly_detection_pipeline(
     rolling_window: int = 24,
     rolling_sigma: float = 2.5,
     isolation_forest_contamination: float = 0.03,
-    regime_sigma: float = 2.5
+    regime_sigma: float = 2.5,
+    user_id: Optional[str] = None
 ) -> Dict[str, Any]:
-    state = get_analysis_state(analysis_id)
-    if not state:
-        raise ValueError(f"Analysis with ID '{analysis_id}' not found.")
+    state = verify_analysis_ownership(analysis_id, user_id=user_id)
 
     test_meta_df = state["test_meta_df"].copy()
     y_val = state["y_val"]

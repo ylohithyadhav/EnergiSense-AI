@@ -129,7 +129,7 @@ async def get_user_analyses(user_id: str) -> List[Dict[str, Any]]:
             logger.warning(f"Firestore fetch error: {e}. Checking local cache.")
 
     # Local fallback
-    user_records = [r for r in _LOCAL_ANALYSES_HISTORY if r.get("userId") == user_id or user_id == "demo-guest-user"]
+    user_records = [r for r in _LOCAL_ANALYSES_HISTORY if r.get("userId") == user_id]
     return user_records
 
 async def get_analysis_by_id(analysis_id: str, user_id: str) -> Optional[Dict[str, Any]]:
@@ -139,7 +139,7 @@ async def get_analysis_by_id(analysis_id: str, user_id: str) -> Optional[Dict[st
             doc = db.collection("analyses").document(analysis_id).get()
             if doc.exists:
                 data = doc.to_dict()
-                if data.get("userId") == user_id or user_id == "demo-guest-user":
+                if data.get("userId") == user_id:
                     return data
                 else:
                     logger.warning(f"Unauthorized access to analysis {analysis_id} by user {user_id}")
@@ -149,7 +149,7 @@ async def get_analysis_by_id(analysis_id: str, user_id: str) -> Optional[Dict[st
 
     for r in _LOCAL_ANALYSES_HISTORY:
         if r.get("analysisId") == analysis_id:
-            if r.get("userId") == user_id or user_id == "demo-guest-user":
+            if r.get("userId") == user_id:
                 return r
             logger.warning(f"Unauthorized access to local analysis {analysis_id} by user {user_id}")
             return None
@@ -167,8 +167,40 @@ async def get_evaluation_by_analysis_id(analysis_id: str, user_id: str) -> Optio
             )
             for doc in docs:
                 data = doc.to_dict()
-                if data.get("userId") == user_id or user_id == "demo-guest-user":
+                if data.get("userId") == user_id:
                     return data
         except Exception as e:
             logger.warning(f"Firestore evaluation fetch error: {e}")
     return None
+
+async def delete_analysis_record(analysis_id: str, user_id: str) -> bool:
+    """
+    Deletes an analysis record and its corresponding evaluation record
+    from Cloud Firestore and local history for the given user_id.
+    """
+    db = get_firestore_client()
+    deleted = False
+    if db:
+        try:
+            doc_ref = db.collection("analyses").document(analysis_id)
+            doc = doc_ref.get()
+            if doc.exists and doc.to_dict().get("userId") == user_id:
+                doc_ref.delete()
+                deleted = True
+            eval_docs = (
+                db.collection("modelEvaluations")
+                .where("analysisId", "==", analysis_id)
+                .stream()
+            )
+            for edoc in eval_docs:
+                if edoc.to_dict().get("userId") == user_id:
+                    edoc.reference.delete()
+        except Exception as e:
+            logger.warning(f"Firestore delete analysis error: {e}")
+
+    global _LOCAL_ANALYSES_HISTORY
+    _LOCAL_ANALYSES_HISTORY = [
+        r for r in _LOCAL_ANALYSES_HISTORY
+        if not (r.get("analysisId") == analysis_id and r.get("userId") == user_id)
+    ]
+    return deleted

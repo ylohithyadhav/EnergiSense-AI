@@ -156,6 +156,20 @@ class ApiService {
     );
   }
 
+  async deleteDataset(
+    fileId: string,
+    token: string | null
+  ): Promise<{ file_id: string; deleted: boolean; filename?: string; invalidated_analyses?: string[]; message: string }> {
+    return this.executeFetch(
+      `${API_BASE_URL}/api/dataset/${fileId}`,
+      {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      },
+      token
+    );
+  }
+
   async trainModel(payload: any, token: string | null): Promise<TrainResponse> {
     return this.executeFetch<TrainResponse>(
       `${API_BASE_URL}/api/model/train`,

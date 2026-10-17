@@ -4,19 +4,22 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Query, Response
 from app.schemas.analysis_schemas import (
-    HealthResponse, StatusResponse, DatasetUploadResponse,
+    HealthResponse, StatusResponse, DatasetUploadResponse, DatasetDeleteResponse,
     TrainRequest, TrainResponse, PredictRequest, PredictResponse,
     AnomalyDetectRequest, AnomalyDetectResponse,
     SHAPExplainRequest, SHAPExplainResponse, AnalysisHistoryItem
 )
 from app.core.config import settings
 from app.core.auth import get_current_user
-from app.services.csv_service import process_and_validate_csv, get_stored_dataset
-from app.models.lgbm_pipeline import train_lightgbm_pipeline, get_analysis_state
+from app.services.csv_service import (
+    process_and_validate_csv, get_stored_dataset, verify_dataset_ownership, delete_stored_dataset
+)
+from app.models.lgbm_pipeline import train_lightgbm_pipeline, get_analysis_state, verify_analysis_ownership
 from app.services.anomaly_service import run_anomaly_detection_pipeline
 from app.services.shap_service import compute_shap_explanations
 from app.services.firestore_backend import (
-    save_analysis_record, get_user_analyses, get_analysis_by_id, get_evaluation_by_analysis_id
+    save_analysis_record, get_user_analyses, get_analysis_by_id, get_evaluation_by_analysis_id,
+    delete_analysis_record
 )
 
 router = APIRouter()
@@ -48,7 +51,7 @@ async def upload_dataset(
     """
     Validates CSV format, size, content structure, detects missing values and candidate columns.
     """
-    result = await process_and_validate_csv(file, max_size_mb=settings.MAX_UPLOAD_SIZE_MB)
+    result = await process_and_validate_csv(file, max_size_mb=settings.MAX_UPLOAD_SIZE_MB, user_id=user["uid"])
     return result
 
 @router.get("/dataset/preview")
@@ -57,6 +60,11 @@ async def get_dataset_preview(
     limit: int = Query(15, ge=1, le=100),
     user: dict = Depends(get_current_user)
 ):
+    try:
+        verify_dataset_ownership(file_id, user_id=user["uid"])
+    except (ValueError, PermissionError):
+        raise HTTPException(status_code=404, detail="Dataset not found or access denied.")
+
     df = get_stored_dataset(file_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Dataset not found or session expired. Please re-upload.")
@@ -69,6 +77,27 @@ async def get_dataset_preview(
         "rows": clean_preview
     }
 
+@router.delete("/dataset/{file_id}", response_model=DatasetDeleteResponse)
+async def delete_dataset(
+    file_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Securely deletes an uploaded dataset owned by the authenticated user.
+    Invalidates any active analyses derived from this dataset.
+    """
+    try:
+        result = delete_stored_dataset(file_id=file_id, user_id=user["uid"])
+        for aid in result.get("invalidated_analyses", []):
+            await delete_analysis_record(analysis_id=aid, user_id=user["uid"])
+        return result
+    except (ValueError, PermissionError):
+        raise HTTPException(status_code=404, detail="Dataset not found or access denied.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Dataset deletion failed: {str(e)}")
+
 @router.post("/model/train", response_model=TrainResponse)
 async def train_model(
     req: TrainRequest,
@@ -77,6 +106,11 @@ async def train_model(
     """
     Trains LightGBM pipeline chronologically (no data leakage).
     """
+    try:
+        verify_dataset_ownership(req.file_id, user_id=user["uid"])
+    except (ValueError, PermissionError):
+        raise HTTPException(status_code=404, detail="Dataset not found or access denied.")
+
     df = get_stored_dataset(req.file_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Dataset not found for the given file_id. Please upload the CSV first.")
@@ -95,7 +129,9 @@ async def train_model(
             train_split=req.train_split,
             val_split=req.val_split,
             test_split=req.test_split,
-            dataset_name=req.dataset_name or "Uploaded Dataset"
+            dataset_name=req.dataset_name or "Uploaded Dataset",
+            user_id=user["uid"],
+            file_id=req.file_id
         )
         return train_result
     except Exception as e:
@@ -109,9 +145,10 @@ async def generate_predictions(
     """
     Generates out-of-sample energy predictions using the trained LightGBM model.
     """
-    state = get_analysis_state(req.analysis_id)
-    if not state:
-        raise HTTPException(status_code=404, detail="Analysis not found. Please train a model first.")
+    try:
+        state = verify_analysis_ownership(req.analysis_id, user_id=user["uid"])
+    except (ValueError, PermissionError):
+        raise HTTPException(status_code=404, detail="Analysis not found or access denied.")
 
     model = state.get("model")
     X_test = state.get("X_test")
@@ -162,7 +199,8 @@ async def detect_anomalies(
             rolling_window=req.rolling_window,
             rolling_sigma=req.rolling_sigma,
             isolation_forest_contamination=req.isolation_forest_contamination,
-            regime_sigma=req.regime_sigma
+            regime_sigma=req.regime_sigma,
+            user_id=user["uid"]
         )
         
         # Save to Firestore history
@@ -183,8 +221,8 @@ async def detect_anomalies(
             )
             
         return detection_result
-    except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+    except (ValueError, PermissionError):
+        raise HTTPException(status_code=404, detail="Analysis not found or access denied.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Anomaly detection failed: {str(e)}")
 
@@ -200,11 +238,12 @@ async def explain_predictions(
         shap_res = compute_shap_explanations(
             analysis_id=req.analysis_id,
             sample_size=req.sample_size,
-            record_index=req.record_index
+            record_index=req.record_index,
+            user_id=user["uid"]
         )
         return shap_res
-    except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+    except (ValueError, PermissionError):
+        raise HTTPException(status_code=404, detail="Analysis not found or access denied.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"SHAP explanation failed: {str(e)}")
 
@@ -213,8 +252,8 @@ async def evaluate_analysis(
     analysis_id: str = Query(...),
     user: dict = Depends(get_current_user)
 ):
-    state = get_analysis_state(analysis_id)
-    if state:
+    try:
+        state = verify_analysis_ownership(analysis_id, user_id=user["uid"])
         return {
             "analysis_id": analysis_id,
             "dataset_name": state["dataset_name"],
@@ -224,6 +263,8 @@ async def evaluate_analysis(
             "baseline_rmse": state["baseline_rmse"],
             "method_comparison": state.get("method_comparison", [])
         }
+    except (ValueError, PermissionError):
+        pass
     
     # Check Cloud Firestore persistence
     eval_doc = await get_evaluation_by_analysis_id(analysis_id, user["uid"])
@@ -282,7 +323,11 @@ async def export_results_csv(
     """
     Exports full prediction and anomaly detection results as downloadable CSV.
     """
-    state = get_analysis_state(analysis_id)
+    try:
+        state = verify_analysis_ownership(analysis_id, user_id=user["uid"])
+    except (ValueError, PermissionError):
+        raise HTTPException(status_code=404, detail="Analysis not found or access denied.")
+
     if not state or "anomaly_records" not in state:
         raise HTTPException(status_code=404, detail="Analysis or detection results not found.")
 

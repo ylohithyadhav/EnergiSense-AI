@@ -31,6 +31,13 @@ class DatasetUploadResponse(BaseModel):
     preview_rows: List[Dict[str, Any]]
     suggested_mapping: Dict[str, Any]
 
+class DatasetDeleteResponse(BaseModel):
+    file_id: str
+    deleted: bool
+    filename: Optional[str] = None
+    invalidated_analyses: List[str] = Field(default_factory=list)
+    message: str
+
 class TrainRequest(BaseModel):
     file_id: str
     dataset_name: Optional[str] = "Uploaded Dataset"
@@ -50,6 +57,7 @@ class FeatureImportanceItem(BaseModel):
 class TrainResponse(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
     analysis_id: str
+    user_id: Optional[str] = None
     dataset_name: str
     model_name: str = "LightGBM Regressor"
     train_rows: int
